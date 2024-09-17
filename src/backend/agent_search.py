@@ -1,4 +1,5 @@
 # This code is messy, this was originally an experiment
+import os
 import asyncio
 from typing import AsyncIterator
 

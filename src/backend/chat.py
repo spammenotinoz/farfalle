@@ -1,4 +1,5 @@
 import asyncio
+import os
 from typing import AsyncIterator, List
 
 from fastapi import HTTPException
@@ -56,7 +57,8 @@ async def stream_qa_objects(
 ) -> AsyncIterator[ChatResponseEvent]:
     try:
         model_name = get_model_string(request.model)
-        llm = EveryLLM(model=model_name)
+        litellm_api_base = os.getenv("LITELLM_API_BASE", "http://litellm_ow:4000")
+        llm = EveryLLM(model=model_name, litellm_api_base=litellm_api_base)
 
         yield ChatResponseEvent(
             event=StreamEvent.BEGIN_STREAM,
