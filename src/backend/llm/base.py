@@ -33,28 +33,32 @@ class EveryLLM(BaseLLM):
     def __init__(
         self,
         model: str,
+        litellm_api_base: str,
     ):
-        os.environ.setdefault("OLLAMA_API_BASE", "http://localhost:11434")
-
-        validation = validate_environment(model)
-        if validation["missing_keys"]:
-            raise ValueError(f"Missing keys: {validation['missing_keys']}")
-
-        self.llm = LiteLLM(model=model)
-        if 'ollama_chat' in model:
-            self.client = instructor.from_litellm(completion, mode=instructor.Mode.MD_JSON)
-        else:
-            self.client = instructor.from_litellm(completion)
+        self.model = model
+        self.litellm_api_base = litellm_api_base
+        self.client = instructor.patch(completion)
 
     async def astream(self, prompt: str) -> CompletionResponseAsyncGen:
-        return await self.llm.astream_complete(prompt)
+        async for chunk in completion(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            stream=True,
+            api_base=self.litellm_api_base,
+        ):
+            yield chunk
 
     def complete(self, prompt: str) -> CompletionResponse:
-        return self.llm.complete(prompt)
+        return completion(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            api_base=self.litellm_api_base,
+        )
 
     def structured_complete(self, response_model: type[T], prompt: str) -> T:
         return self.client.chat.completions.create(
-            model=self.llm.model,
+            model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_model=response_model,
+            api_base=self.litellm_api_base,
         )
