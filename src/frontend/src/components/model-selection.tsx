@@ -108,46 +108,12 @@ export function ModelSelection() {
           </div>
         </SelectValue>
       </SelectTrigger>
-      <SelectContent className="w-[250px]">
-        <Tabs
-          className="w-full"
-          defaultValue={localMode ? "local" : "cloud"}
-          onValueChange={(value) => {
-            if (value === "local" && !localMode) {
-              toggleLocalMode();
-            } else if (value === "cloud" && localMode) {
-              toggleLocalMode();
-            }
-          }}
-        >
-          <TabsList className="w-full">
-            <TabsTrigger value="cloud" className="flex-1">
-              Cloud
-            </TabsTrigger>
-            <TabsTrigger
-              value="local"
-              disabled={!env.NEXT_PUBLIC_LOCAL_MODE_ENABLED}
-              className="flex-1 disabled:opacity-50"
-            >
-              Local
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="cloud" className="w-full">
-            <SelectGroup className="w-full">
-              {Object.values(cloudModelMap).map((model) => (
-                <ModelItem key={model.value} model={model} />
-              ))}
-            </SelectGroup>
-          </TabsContent>
-          <TabsContent value="local" className="w-full">
-            <SelectGroup className="w-full">
-              {Object.values(localModelMap).map((model) => (
-                <ModelItem key={model.value} model={model} />
-              ))}
-            </SelectGroup>
-          </TabsContent>
-        </Tabs>
-      </SelectContent>
-    </Select>
+	<SelectContent className="w-[250px]">
+		<SelectGroup className="w-full">
+		{Object.values(cloudModelMap).map((model) => (
+		<ModelItem key={model.value} model={model} />
+		))}
+		</SelectGroup>
+	</SelectContent>
   );
 }
