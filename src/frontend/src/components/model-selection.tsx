@@ -57,7 +57,7 @@ export const modelMap: Record<ChatModel, Model> = {
     value: ChatModel.Claude_3_5_Sonnet,
     smallIcon: <LightningBoltIcon className="w-4 h-4 text-yellow-500" />,
     icon: <LightningBoltIcon className="w-5 h-5 text-yellow-500" />,
-  }
+  },
 };
 
 const localModelMap: Partial<Record<ChatModel, Model>> = _.pickBy(
