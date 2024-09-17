@@ -7,7 +7,7 @@ load_dotenv()
 
 
 class ChatModel(str, Enum):
-    Claude_3_5_Sonnet = "Claude 3.5 Sonnet"
+    CLAUDE_3_5_SONNET = "Claude 3.5 Sonnet"
     GPT_4o = "gpt-4o"
     GPT_4o_mini = "gpt-4o-mini"
     COMMAND_R = "command-r"
@@ -25,7 +25,7 @@ class ChatModel(str, Enum):
 model_mappings: dict[ChatModel, str] = {
     ChatModel.GPT_4o: "gpt-4o",
     ChatModel.GPT_4o_mini: "gpt-4o-mini",
-    ChatModel.Claude_3_5_Sonnet: "Claude 3.5 Sonnet",
+    ChatModel.CLAUDE_3_5_SONNET: "Claude 3.5 Sonnet",
 }
 
 
