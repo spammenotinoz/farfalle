@@ -37,7 +37,21 @@ class EveryLLM(BaseLLM):
     ):
         self.model = model
         self.litellm_api_base = litellm_api_base
-        self.client = instructor.patch(completion)
+        
+        # Create a wrapper function that mimics the OpenAI client structure
+        class ChatCompletions:
+            @staticmethod
+            def create(*args, **kwargs):
+                return completion(*args, **kwargs)
+        
+        class Chat:
+            completions = ChatCompletions()
+        
+        class Client:
+            chat = Chat()
+        
+        # Use the wrapper with instructor
+        self.client = instructor.patch(Client())
 
     async def astream(self, prompt: str) -> CompletionResponseAsyncGen:
         async for chunk in completion(
