@@ -17,11 +17,11 @@ const mono = Mono({
   variable: "--font-mono",
 });
 
-const title = "Farfalle";
+const title = "Ultimate Search";
 const description = "Open-source AI powered answer engine.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://farfalle.dev/"),
+  metadataBase: new URL("https://search.ultimateai.org/"),
   title,
   description,
   openGraph: {
