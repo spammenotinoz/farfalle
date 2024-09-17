@@ -67,7 +67,7 @@ async def stream_qa_objects(
 
         query = rephrase_query_with_history(request.query, request.history, llm)
 
-        search_response = await perform_search(query)  # Add 'await' here
+        search_response = await perform_search(query)
 
         search_results = search_response.results
         images = search_response.images
@@ -93,13 +93,28 @@ async def stream_qa_objects(
         )
 
         full_response = ""
-        response_gen = llm.astream(fmt_qa_prompt)  # Remove 'await' here
-        async for completion in response_gen:
-            full_response += completion.delta or ""
-            yield ChatResponseEvent(
-                event=StreamEvent.TEXT_CHUNK,
-                data=TextChunkStream(text=completion.delta or ""),
-            )
+        response_gen = llm.astream(fmt_qa_prompt)
+        
+        # Handle both Stream and async generator cases
+        if hasattr(response_gen, '__aiter__'):
+            async for completion in response_gen:
+                full_response += completion.delta or ""
+                yield ChatResponseEvent(
+                    event=StreamEvent.TEXT_CHUNK,
+                    data=TextChunkStream(text=completion.delta or ""),
+                )
+        else:
+            # Assume it's a Stream object
+            while True:
+                try:
+                    completion = await response_gen.__anext__()
+                    full_response += completion.delta or ""
+                    yield ChatResponseEvent(
+                        event=StreamEvent.TEXT_CHUNK,
+                        data=TextChunkStream(text=completion.delta or ""),
+                    )
+                except StopAsyncIteration:
+                    break
 
         related_queries = await (
             related_queries_task
