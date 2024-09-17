@@ -7,7 +7,7 @@ load_dotenv()
 
 
 class ChatModel(str, Enum):
-    CLAUDE_3_5_SONNET = "Claude 3.5 Sonnet"
+    CLAUDE_3_5_SONNET = "claude-3-5-sonnet"
     GPT_4o = "gpt-4o"
     GPT_4o_mini = "gpt-4o-mini"
     COMMAND_R = "command-r"
@@ -25,7 +25,7 @@ class ChatModel(str, Enum):
 model_mappings: dict[ChatModel, str] = {
     ChatModel.GPT_4o: "gpt-4o",
     ChatModel.GPT_4o_mini: "gpt-4o-mini",
-    ChatModel.CLAUDE_3_5_SONNET: "Claude 3.5 Sonnet",
+    ChatModel.CLAUDE_3_5_SONNET: "claude-3-5-sonnet",
 }
 
 
@@ -36,7 +36,7 @@ def get_model_string(model: ChatModel) -> str:
             raise ValueError("CUSTOM_MODEL is not set")
         return custom_model
 
-    if model in {ChatModel.GPT_4o_mini, ChatModel.GPT_4o}:
+    if model in {ChatModel.GPT_4o_mini, ChatModel.GPT_4o, ChatModel.claude-3-5-sonnet}:
         openai_mode = os.environ.get("OPENAI_MODE", "openai")
         if openai_mode == "azure":
             # Currently deployments are named "gpt-35-turbo" and "gpt-4o"
