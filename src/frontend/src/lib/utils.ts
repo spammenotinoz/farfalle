@@ -14,6 +14,6 @@ export function isCloudModel(model: ChatModel) {
   return [
     ChatModel.GPT_4O,
     ChatModel.GPT_4O_MINI,
-	ChatModel.Claude_3_5_SONNET,
+	ChatModel.CLAUDE_3_5_SONNET,
   ].includes(model);
 }
