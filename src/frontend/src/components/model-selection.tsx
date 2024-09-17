@@ -51,48 +51,13 @@ export const modelMap: Record<ChatModel, Model> = {
     smallIcon: <BrainIcon className="w-4 h-4 text-pink-500" />,
     icon: <BrainIcon className="w-5 h-5 text-pink-500" />,
   },
-  [ChatModel.LLAMA_3_70B]: {
+  [ChatModel.Claude_3.5_Sonnet]: {
     name: "Hyper",
-    description: "Groq/Llama3-70B",
-    value: ChatModel.LLAMA_3_70B,
+    description: "anthropic/claude-3.5-sonnet",
+    value: ChatModel.Claude_3.5_Sonnet,
     smallIcon: <LightningBoltIcon className="w-4 h-4 text-yellow-500" />,
     icon: <LightningBoltIcon className="w-5 h-5 text-yellow-500" />,
-  },
-  [ChatModel.LLAMA3]: {
-    name: "Llama3",
-    description: "ollama/llama3.1",
-    value: ChatModel.LLAMA3,
-    smallIcon: <WandSparklesIcon className="w-4 h-4 text-purple-500" />,
-    icon: <WandSparklesIcon className="w-5 h-5 text-purple-500" />,
-  },
-  [ChatModel.GEMMA]: {
-    name: "Gemma",
-    description: "ollama/gemma",
-    value: ChatModel.GEMMA,
-    smallIcon: <SparklesIcon className="w-4 h-4 text-[#449DFF]" />,
-    icon: <SparklesIcon className="w-5 h-5 text-[#449DFF]" />,
-  },
-  [ChatModel.MISTRAL]: {
-    name: "Mistral",
-    description: "ollama/mistral",
-    value: ChatModel.MISTRAL,
-    smallIcon: <AtomIcon className="w-4 h-4 text-[#FF7000]" />,
-    icon: <AtomIcon className="w-5 h-5 text-[#FF7000]" />,
-  },
-  [ChatModel.PHI3_14B]: {
-    name: "Phi3",
-    description: "ollama/phi3:14b",
-    value: ChatModel.PHI3_14B,
-    smallIcon: <FlameIcon className="w-4 h-4 text-green-500" />,
-    icon: <FlameIcon className="w-5 h-5 text-green-500" />,
-  },
-  [ChatModel.CUSTOM]: {
-    name: "Custom",
-    description: "Custom model",
-    value: ChatModel.CUSTOM,
-    smallIcon: <SettingsIcon className="w-4 h-4 text-red-500" />,
-    icon: <SettingsIcon className="w-5 h-5 text-red-500" />,
-  },
+  }
 };
 
 const localModelMap: Partial<Record<ChatModel, Model>> = _.pickBy(
