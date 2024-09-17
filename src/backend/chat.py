@@ -67,7 +67,7 @@ async def stream_qa_objects(
 
         query = rephrase_query_with_history(request.query, request.history, llm)
 
-        search_response = perform_search(query)
+        search_response = await perform_search(query)  # Add 'await' here
 
         search_results = search_response.results
         images = search_response.images
@@ -93,7 +93,7 @@ async def stream_qa_objects(
         )
 
         full_response = ""
-        response_gen = await llm.astream(fmt_qa_prompt)
+        response_gen = llm.astream(fmt_qa_prompt)  # Remove 'await' here
         async for completion in response_gen:
             full_response += completion.delta or ""
             yield ChatResponseEvent(
