@@ -6,6 +6,15 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - dev
+      - staging
+      - sb     
+    tags:
+      - v*
+
 
 env:
   REGISTRY: ghcr.io
