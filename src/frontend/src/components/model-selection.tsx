@@ -87,7 +87,7 @@ const ModelItem: React.FC<{ model: Model }> = ({ model }) => (
 );
 
 export function ModelSelection() {
-  const { localMode, model, setModel, toggleLocalMode } = useConfigStore();
+  const { model, setModel } = useConfigStore();
   const selectedModel = modelMap[model] ?? modelMap[ChatModel.GPT_4O_MINI];
 
   return (
@@ -108,12 +108,13 @@ export function ModelSelection() {
           </div>
         </SelectValue>
       </SelectTrigger>
-	<SelectContent className="w-[250px]">
-		<SelectGroup className="w-full">
-		{Object.values(cloudModelMap).map((model) => (
-		<ModelItem key={model.value} model={model} />
-		))}
-		</SelectGroup>
-	</SelectContent>
+      <SelectContent className="w-[250px]">
+        <SelectGroup className="w-full">
+          {Object.values(cloudModelMap).map((model) => (
+            <ModelItem key={model.value} model={model} />
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }
