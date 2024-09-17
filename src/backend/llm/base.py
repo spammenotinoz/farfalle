@@ -41,7 +41,7 @@ class EveryLLM(BaseLLM):
             raise ValueError(f"Missing keys: {validation['missing_keys']}")
 
         self.llm = LiteLLM(model=model)
-        if 'groq' in model or 'ollama_chat' in model:
+        if 'ollama_chat' in model:
             self.client = instructor.from_litellm(completion, mode=instructor.Mode.MD_JSON)
         else:
             self.client = instructor.from_litellm(completion)
