@@ -6,7 +6,7 @@ import instructor
 from dotenv import load_dotenv
 from instructor.client import T
 from litellm import completion
-from litellm.utils import validate_environment, Stream
+from litellm.utils import validate_environment
 from llama_index.core.base.llms.types import (
     CompletionResponse,
     CompletionResponseAsyncGen,
@@ -64,16 +64,8 @@ class EveryLLM(BaseLLM):
             api_key=self.api_key,
         )
         
-        if isinstance(response, Stream):
-            while True:
-                try:
-                    chunk = await response.__anext__()
-                    yield chunk
-                except StopAsyncIteration:
-                    break
-        else:
-            async for chunk in response:
-                yield chunk
+        async for chunk in response:
+            yield chunk
 
     def complete(self, prompt: str) -> CompletionResponse:
         return completion(
