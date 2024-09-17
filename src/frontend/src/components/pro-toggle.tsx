@@ -55,18 +55,6 @@ const ProToggle = () => {
               answer more accurate.
             </div>
           </div>
-          <Separator className="mt-1" />
-          <div className="text-xs text-muted-foreground mt-2">
-            <span>Requires self-hosted setup. </span>
-            <a
-              className="text-primary hover:underline"
-              href="https://github.com/rashadphz/farfalle/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Learn more
-            </a>
-          </div>
         </div>
       </HoverCardContent>
     </HoverCard>
