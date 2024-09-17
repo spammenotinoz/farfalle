@@ -36,7 +36,7 @@ def get_model_string(model: ChatModel) -> str:
             raise ValueError("CUSTOM_MODEL is not set")
         return custom_model
 
-    if model in {ChatModel.GPT_4o_mini, ChatModel.GPT_4o, ChatModel.claude-3-5-sonnet}:
+    if model in {ChatModel.GPT_4o_mini, ChatModel.GPT_4o, ChatModel.CLAUDE_3_5_SONNET}:
         openai_mode = os.environ.get("OPENAI_MODE", "openai")
         if openai_mode == "azure":
             # Currently deployments are named "gpt-35-turbo" and "gpt-4o"
