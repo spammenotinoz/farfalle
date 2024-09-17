@@ -1,11 +1,12 @@
 import os
 from abc import ABC, abstractmethod
+import asyncio
 
 import instructor
 from dotenv import load_dotenv
 from instructor.client import T
 from litellm import completion
-from litellm.utils import validate_environment
+from litellm.utils import validate_environment, Stream
 from llama_index.core.base.llms.types import (
     CompletionResponse,
     CompletionResponseAsyncGen,
@@ -25,7 +26,7 @@ class BaseLLM(ABC):
         pass
 
     @abstractmethod
-    def structured_complete(self, response_model: type[T], prompt: str) -> T:
+    async def structured_complete(self, response_model: type[T], prompt: str) -> T:
         pass
 
 
@@ -37,6 +38,7 @@ class EveryLLM(BaseLLM):
     ):
         self.model = model
         self.litellm_api_base = litellm_api_base
+        self.api_key = os.getenv("LITELLM_API_KEY")
         
         # Create a wrapper function that mimics the OpenAI client structure
         class ChatCompletions:
@@ -54,25 +56,38 @@ class EveryLLM(BaseLLM):
         self.client = instructor.patch(Client())
 
     async def astream(self, prompt: str) -> CompletionResponseAsyncGen:
-        async for chunk in completion(
+        response = completion(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             stream=True,
             api_base=self.litellm_api_base,
-        ):
-            yield chunk
+            api_key=self.api_key,
+        )
+        
+        if isinstance(response, Stream):
+            while True:
+                try:
+                    chunk = await response.__anext__()
+                    yield chunk
+                except StopAsyncIteration:
+                    break
+        else:
+            async for chunk in response:
+                yield chunk
 
     def complete(self, prompt: str) -> CompletionResponse:
         return completion(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             api_base=self.litellm_api_base,
+            api_key=self.api_key,
         )
 
-    def structured_complete(self, response_model: type[T], prompt: str) -> T:
-        return self.client.chat.completions.create(
+    async def structured_complete(self, response_model: type[T], prompt: str) -> T:
+        return await self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_model=response_model,
             api_base=self.litellm_api_base,
+            api_key=self.api_key,
         )
