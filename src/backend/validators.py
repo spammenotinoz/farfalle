@@ -16,10 +16,6 @@ def validate_model(model: ChatModel):
                     "GPT4-o has been disabled. Please try a different model or self-host the app by following the instructions here: https://github.com/rashadphz/farfalle"
                 )
 
-    elif model == ChatModel.LLAMA_3_70B:
-        GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-        if not GROQ_API_KEY:
-            raise ValueError("GROQ_API_KEY environment variable not found")
     elif is_local_model(model):
         LOCAL_MODELS_ENABLED = strtobool(os.getenv("ENABLE_LOCAL_MODELS", True))
         if not LOCAL_MODELS_ENABLED:
