@@ -67,7 +67,7 @@ async def stream_qa_objects(
 
         query = rephrase_query_with_history(request.query, request.history, llm)
 
-        search_response = await perform_search(query)
+        search_response = perform_search(query)
 
         search_results = search_response.results
         images = search_response.images
