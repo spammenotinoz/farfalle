@@ -25,7 +25,7 @@ class ChatModel(str, Enum):
 model_mappings: dict[ChatModel, str] = {
     ChatModel.GPT_4o: "gpt-4o",
     ChatModel.GPT_4o_mini: "gpt-4o-mini",
-    ChatModel.CLAUDE_3_5_SONNET: "claude-3-5-sonnet",
+    ChatModel.CLAUDE_3_5_SONNET: "openai/claude-3-5-sonnet",
 }
 
 
