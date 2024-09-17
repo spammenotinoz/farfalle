@@ -34,10 +34,8 @@ export const createConfigSlice: StateCreator<
       }
 
       const newLocalMode = !state.localMode;
-      const newModel = newLocalMode
-        ? ChatModel.LLAMA3
-        : ChatModel.GPT_4O_MINI;
-      return { localMode: newLocalMode, model: newModel };
+	  const newModel = ChatModel.GPT_4O_MINI;
+	  return { localMode: newLocalMode, model: newModel };
     }),
   toggleProMode: () =>
     set((state) => {
