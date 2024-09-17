@@ -57,7 +57,7 @@ async def stream_qa_objects(
 ) -> AsyncIterator[ChatResponseEvent]:
     try:
         model_name = get_model_string(request.model)
-        litellm_api_base = os.getenv("LITELLM_API_BASE", "http://litellm_ow:4000")
+        litellm_api_base = os.getenv("LITELLM_API_BASE", "http://litellm:4000")
         llm = EveryLLM(model=model_name, litellm_api_base=litellm_api_base)
 
         yield ChatResponseEvent(
