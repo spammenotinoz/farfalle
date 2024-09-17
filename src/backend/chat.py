@@ -1,5 +1,4 @@
 import asyncio
-import os
 from typing import AsyncIterator, List
 
 from fastapi import HTTPException
@@ -57,8 +56,7 @@ async def stream_qa_objects(
 ) -> AsyncIterator[ChatResponseEvent]:
     try:
         model_name = get_model_string(request.model)
-        litellm_api_base = os.getenv("LITELLM_API_BASE", "http://litellm:4000")
-        llm = EveryLLM(model=model_name, litellm_api_base=litellm_api_base)
+        llm = EveryLLM(model=model_name)
 
         yield ChatResponseEvent(
             event=StreamEvent.BEGIN_STREAM,
@@ -93,28 +91,13 @@ async def stream_qa_objects(
         )
 
         full_response = ""
-        response_gen = llm.astream(fmt_qa_prompt)
-        
-        # Handle both Stream and async generator cases
-        if hasattr(response_gen, '__aiter__'):
-            async for completion in response_gen:
-                full_response += completion.delta or ""
-                yield ChatResponseEvent(
-                    event=StreamEvent.TEXT_CHUNK,
-                    data=TextChunkStream(text=completion.delta or ""),
-                )
-        else:
-            # Assume it's a Stream object
-            while True:
-                try:
-                    completion = await response_gen.__anext__()
-                    full_response += completion.delta or ""
-                    yield ChatResponseEvent(
-                        event=StreamEvent.TEXT_CHUNK,
-                        data=TextChunkStream(text=completion.delta or ""),
-                    )
-                except StopAsyncIteration:
-                    break
+        response_gen = await llm.astream(fmt_qa_prompt)
+        async for completion in response_gen:
+            full_response += completion.delta or ""
+            yield ChatResponseEvent(
+                event=StreamEvent.TEXT_CHUNK,
+                data=TextChunkStream(text=completion.delta or ""),
+            )
 
         related_queries = await (
             related_queries_task

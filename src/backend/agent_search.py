@@ -1,5 +1,4 @@
 # This code is messy, this was originally an experiment
-import os
 import asyncio
 from typing import AsyncIterator
 
@@ -294,6 +293,7 @@ async def stream_pro_search_objects(
             )
             return
 
+
 async def stream_pro_search_qa(
     request: ChatRequest, session: Session
 ) -> AsyncIterator[ChatResponseEvent]:
@@ -305,12 +305,13 @@ async def stream_pro_search_qa(
             )
 
         model_name = get_model_string(request.model)
-        litellm_api_base = os.getenv("LITELLM_API_BASE", "http://litellm:4000")
-        llm = EveryLLM(model=model_name, litellm_api_base=litellm_api_base)
+        llm = EveryLLM(model=model_name)
+
         query = rephrase_query_with_history(request.query, request.history, llm)
         async for event in stream_pro_search_objects(request, llm, query, session):
             yield event
-        await asyncio.sleep(0)
+            await asyncio.sleep(0)
+
     except Exception as e:
         detail = str(e)
         raise HTTPException(status_code=500, detail=detail)
