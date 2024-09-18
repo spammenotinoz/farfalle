@@ -1,10 +1,11 @@
 import { ArrowUpRight } from "lucide-react";
 
 const starterQuestions = [
-  "openai scarlett johansson?",
-  "what is groq?",
-  "what happened to ilya?",
-];
+  "What is a LLM?",
+  "Trump assassination attempt",
+  "Why are Israel and Hamas at war?",
+  "Chandrayaan-3 landing?",
+  ];
 
 export const StarterQuestionsList = ({
   handleSend,
