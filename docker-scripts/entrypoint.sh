@@ -15,13 +15,5 @@ run_frontend() {
     pm2 start pnpm -- start
 }
 
-run_searxng() {
-    echo "Running searxng"
-    cd /workspace/searxng
-    export SEARXNG_SETTINGS_PATH="/workspace/searxng/settings.yml"
-    python3 searx/webapp.py
-}
-
-run_searxng &
 run_frontend &
 run_backend
