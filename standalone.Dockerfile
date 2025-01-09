@@ -38,7 +38,7 @@ WORKDIR /workspace
 COPY pyproject.toml poetry.lock ./
 
 # Install dependencies
-RUN poetry install
+RUN poetry install --no-root
 
 # Copy the rest of the code
 COPY src/backend src/backend
