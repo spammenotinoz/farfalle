@@ -51,10 +51,10 @@ export const modelMap: Record<ChatModel, Model> = {
     smallIcon: <BrainIcon className="w-4 h-4 text-pink-500" />,
     icon: <BrainIcon className="w-5 h-5 text-pink-500" />,
   },
-  [ChatModel.CLAUDE_3_5_SONNET]: {
+  [ChatModel.CLAUDE_3_7_SONNET]: {
     name: "Technical",
-    description: "anthropic/claude-3.5-sonnet",
-    value: ChatModel.CLAUDE_3_5_SONNET,
+    description: "anthropic/claude-3.7-sonnet",
+    value: ChatModel.CLAUDE_3_7_SONNET,
     smallIcon: <LightningBoltIcon className="w-4 h-4 text-yellow-500" />,
     icon: <LightningBoltIcon className="w-5 h-5 text-yellow-500" />,
   },

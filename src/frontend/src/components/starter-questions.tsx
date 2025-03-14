@@ -1,11 +1,14 @@
 import { ArrowUpRight } from "lucide-react";
 
 const starterQuestions = [
-  "What is a LLM?",
-  "Trump assassination attempt",
-  "Why are Israel and Hamas at war?",
-  "Chandrayaan-3 landing?",
-  ];
+"What is ChatGPT?",
+"Eight Sleep mattress reviews",
+"Wordle daily puzzle",
+"Australian Football Predictions",
+"Election results 2024",
+"Connections game tips",
+"Facebook Marketplace near me"
+]
 
 export const StarterQuestionsList = ({
   handleSend,
