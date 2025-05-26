@@ -34,7 +34,7 @@ export const createConfigSlice: StateCreator<
       }
 
       const newLocalMode = !state.localMode;
-	  const newModel = ChatModel.GPT_4O_MINI;
+	  const newModel = ChatModel.GPT_4_1_MINI;
 	  return { localMode: newLocalMode, model: newModel };
     }),
   toggleProMode: () =>
