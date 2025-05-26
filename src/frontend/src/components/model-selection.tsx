@@ -37,24 +37,24 @@ type Model = {
 };
 
 export const modelMap: Record<ChatModel, Model> = {
-  [ChatModel.GPT_4O_MINI]: {
+  [ChatModel.GPT_4_1_MINI]: {
     name: "Fast",
     description: "OpenAI/GPT-4o-mini",
     value: ChatModel.GPT_4O_MINI,
     smallIcon: <RabbitIcon className="w-4 h-4 text-cyan-500" />,
     icon: <RabbitIcon className="w-5 h-5 text-cyan-500" />,
   },
-  [ChatModel.GPT_4O]: {
+  [ChatModel.GPT_4_1]: {
     name: "Powerful",
-    description: "OpenAI/GPT-4o",
+    description: "OpenAI/GPT-4.1",
     value: ChatModel.GPT_4O,
     smallIcon: <BrainIcon className="w-4 h-4 text-pink-500" />,
     icon: <BrainIcon className="w-5 h-5 text-pink-500" />,
   },
-  [ChatModel.CLAUDE_3_7_SONNET]: {
+  [ChatModel.CLAUDE_4_SONNET]: {
     name: "Technical",
-    description: "anthropic/claude-3-7-sonnet",
-    value: ChatModel.CLAUDE_3_7_SONNET,
+    description: "anthropic/claude-4-sonnet",
+    value: ChatModel.CLAUDE_4_SONNET,
     smallIcon: <LightningBoltIcon className="w-4 h-4 text-yellow-500" />,
     icon: <LightningBoltIcon className="w-5 h-5 text-yellow-500" />,
   },
@@ -88,7 +88,7 @@ const ModelItem: React.FC<{ model: Model }> = ({ model }) => (
 
 export function ModelSelection() {
   const { model, setModel } = useConfigStore();
-  const selectedModel = modelMap[model] ?? modelMap[ChatModel.GPT_4O_MINI];
+  const selectedModel = modelMap[model] ?? modelMap[ChatModel.GPT_4_1_MINI];
 
   return (
     <Select
