@@ -35,7 +35,7 @@ class ChatRequest(BaseModel, plugin_settings=record_all):
     thread_id: int | None = None
     query: str
     history: List[Message] = Field(default_factory=list)
-    model: ChatModel = ChatModel.GPT_4o_mini
+    model: ChatModel = ChatModel.GPT_4_1_mini
     pro_search: bool = False
 
 
