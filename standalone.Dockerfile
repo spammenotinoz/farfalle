@@ -65,4 +65,4 @@ RUN pnpm build
 EXPOSE 8000
 EXPOSE 3000
 
-CMD pm2 start /workspace/src/backend/main.py --interpreter=python3 --name backend && pm2 start npm --name frontend -- run start && pm2 logs
+CMD NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://test.ultimateai.org/back} pm2 start /workspace/src/backend/main.py --interpreter=python3 --name backend && pm2 start npm --name frontend -- run start && pm2 logs
