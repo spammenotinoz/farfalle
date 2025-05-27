@@ -3,6 +3,7 @@
 name: Create and publish single container image
 
 on:
+
   release:
     types: [published]
   workflow_dispatch:
@@ -11,7 +12,8 @@ on:
       - main
       - dev
       - staging
-      - sb     
+      - sb
+      - working      
     tags:
       - v*
 
