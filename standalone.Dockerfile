@@ -62,7 +62,10 @@ COPY src/frontend/ .
 
 RUN pnpm build
 
+COPY docker-scripts/entrypoint.sh /workspace/sbin/entrypoint.sh
+RUN chmod +x /workspace/sbin/entrypoint.sh
+
 EXPOSE 8000
 EXPOSE 3000
 
-CMD NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://test.ultimateai.org/back} pm2 start /workspace/src/backend/main.py --interpreter=python3 --name backend && pm2 start npm --name frontend -- run start && pm2 logs
+ENTRYPOINT ["/workspace/sbin/entrypoint.sh"]
