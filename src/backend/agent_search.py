@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from backend.chat import rephrase_query_with_history
 from backend.constants import get_model_string
 from backend.db.chat import save_turn_to_db
-from backend.llm.base import BaseLLM, EveryLLM
+from backend.llm.base import OpenAILLM
 from backend.prompts import CHAT_PROMPT, QUERY_PLAN_PROMPT, SEARCH_QUERY_PROMPT
 from backend.related_queries import generate_related_queries
 from backend.schemas import (
@@ -237,14 +237,11 @@ async def stream_pro_search_objects(
                 my_query=query,
             )
 
-            full_response = ""
-            response_gen = await llm.astream(fmt_qa_prompt)
-            async for completion in response_gen:
-                full_response += completion.delta or ""
-                yield ChatResponseEvent(
-                    event=StreamEvent.TEXT_CHUNK,
-                    data=TextChunkStream(text=completion.delta or ""),
-                )
+            full_response = await llm.astream(fmt_qa_prompt)
+            yield ChatResponseEvent(
+                event=StreamEvent.TEXT_CHUNK,
+                data=TextChunkStream(text=full_response),
+            )
 
             related_queries = await (
                 related_queries_task
@@ -305,7 +302,7 @@ async def stream_pro_search_qa(
             )
 
         model_name = get_model_string(request.model)
-        llm = EveryLLM(model=model_name)
+        llm = OpenAILLM(model=model_name)
 
         query = rephrase_query_with_history(request.query, request.history, llm)
         async for event in stream_pro_search_objects(request, llm, query, session):

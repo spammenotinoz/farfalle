@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from backend.constants import get_model_string
 from backend.db.chat import save_turn_to_db
-from backend.llm.base import BaseLLM, EveryLLM
+from backend.llm.base import BaseLLM, OpenAILLM
 from backend.prompts import CHAT_PROMPT, HISTORY_QUERY_REPHRASE
 from backend.related_queries import generate_related_queries
 from backend.schemas import (
@@ -37,7 +37,7 @@ def rephrase_query_with_history(
         formatted_query = HISTORY_QUERY_REPHRASE.format(
             chat_history=history_str, question=question
         )
-        question = llm.complete(formatted_query).text.replace('"', "")
+        question = llm.complete(formatted_query).replace('"', "")
         return question
     except Exception:
         raise HTTPException(
@@ -56,7 +56,7 @@ async def stream_qa_objects(
 ) -> AsyncIterator[ChatResponseEvent]:
     try:
         model_name = get_model_string(request.model)
-        llm = EveryLLM(model=model_name)
+        llm = OpenAILLM(model=model_name)
 
         yield ChatResponseEvent(
             event=StreamEvent.BEGIN_STREAM,
@@ -90,14 +90,11 @@ async def stream_qa_objects(
             my_query=query,
         )
 
-        full_response = ""
-        response_gen = await llm.astream(fmt_qa_prompt)
-        async for completion in response_gen:
-            full_response += completion.delta or ""
-            yield ChatResponseEvent(
-                event=StreamEvent.TEXT_CHUNK,
-                data=TextChunkStream(text=completion.delta or ""),
-            )
+        full_response = await llm.astream(fmt_qa_prompt)
+        yield ChatResponseEvent(
+            event=StreamEvent.TEXT_CHUNK,
+            data=TextChunkStream(text=full_response),
+        )
 
         related_queries = await (
             related_queries_task

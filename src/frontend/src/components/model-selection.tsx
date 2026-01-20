@@ -9,21 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LightningBoltIcon, MagicWandIcon } from "@radix-ui/react-icons";
 import {
-  AtomIcon,
   BrainIcon,
-  FlameIcon,
-  Rabbit,
   RabbitIcon,
-  SettingsIcon,
-  SparklesIcon,
-  WandSparklesIcon,
 } from "lucide-react";
 import { useConfigStore, useChatStore } from "@/stores";
 import { ChatModel } from "../../generated";
 import { isCloudModel, isLocalModel } from "@/lib/utils";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import _ from "lodash";
 import { env } from "@/env.mjs";
@@ -37,33 +29,21 @@ type Model = {
 };
 
 export const modelMap: Record<ChatModel, Model> = {
-  [ChatModel.GPT_4_1_MINI]: {
+  [ChatModel.GPT_4O_MINI]: {
     name: "Fast",
-    description: "OpenAI/GPT-4.1-mini",
-    value: ChatModel.GPT_4_1_MINI,
+    description: "OpenAI/GPT-4o-mini",
+    value: ChatModel.GPT_4O_MINI,
     smallIcon: <RabbitIcon className="w-4 h-4 text-cyan-500" />,
     icon: <RabbitIcon className="w-5 h-5 text-cyan-500" />,
   },
-  [ChatModel.GPT_4_1]: {
+  [ChatModel.GPT_4O]: {
     name: "Powerful",
-    description: "OpenAI/GPT-4.1",
-    value: ChatModel.GPT_4_1,
+    description: "OpenAI/GPT-4o",
+    value: ChatModel.GPT_4O,
     smallIcon: <BrainIcon className="w-4 h-4 text-pink-500" />,
     icon: <BrainIcon className="w-5 h-5 text-pink-500" />,
   },
-  [ChatModel.CLAUDE_4_SONNET]: {
-    name: "Technical",
-    description: "anthropic/claude-4-sonnet",
-    value: ChatModel.CLAUDE_4_SONNET,
-    smallIcon: <LightningBoltIcon className="w-4 h-4 text-yellow-500" />,
-    icon: <LightningBoltIcon className="w-5 h-5 text-yellow-500" />,
-  },
 };
-
-const localModelMap: Partial<Record<ChatModel, Model>> = _.pickBy(
-  modelMap,
-  (_, key) => isLocalModel(key as ChatModel),
-);
 
 const cloudModelMap: Partial<Record<ChatModel, Model>> = _.pickBy(
   modelMap,
@@ -88,7 +68,7 @@ const ModelItem: React.FC<{ model: Model }> = ({ model }) => (
 
 export function ModelSelection() {
   const { model, setModel } = useConfigStore();
-  const selectedModel = modelMap[model] ?? modelMap[ChatModel.GPT_4_1_MINI];
+  const selectedModel = modelMap[model] ?? modelMap[ChatModel.GPT_4O_MINI];
 
   return (
     <Select

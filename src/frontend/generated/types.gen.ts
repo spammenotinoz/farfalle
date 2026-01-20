@@ -65,9 +65,8 @@ export type ChatMessage = {
 };
 
 export enum ChatModel {
-  GPT_4_1 = "gpt-4.1",
-  GPT_4_1_MINI = "gpt-4.1-mini",
-  CLAUDE_4_SONNET = "claude-4-sonnet",
+  GPT_4O = "gpt-4o",
+  GPT_4O_MINI = "gpt-4o-mini",
 }
 
 export type ChatRequest = {

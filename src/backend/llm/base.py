@@ -3,58 +3,56 @@ from abc import ABC, abstractmethod
 
 import instructor
 from dotenv import load_dotenv
-from instructor.client import T
-from litellm import completion
-from litellm.utils import validate_environment
-from llama_index.core.base.llms.types import (
-    CompletionResponse,
-    CompletionResponseAsyncGen,
-)
-from llama_index.llms.litellm import LiteLLM
+from openai import AsyncOpenAI
+from pydantic import BaseModel
 
 load_dotenv()
 
 
 class BaseLLM(ABC):
     @abstractmethod
-    async def astream(self, prompt: str) -> CompletionResponseAsyncGen:
+    async def astream(self, prompt: str) -> str:
         pass
 
     @abstractmethod
-    def complete(self, prompt: str) -> CompletionResponse:
+    def complete(self, prompt: str) -> str:
         pass
 
     @abstractmethod
-    def structured_complete(self, response_model: type[T], prompt: str) -> T:
+    def structured_complete(self, response_model: type[BaseModel], prompt: str) -> BaseModel:
         pass
 
 
-class EveryLLM(BaseLLM):
-    def __init__(
-        self,
-        model: str,
-    ):
-        os.environ.setdefault("OLLAMA_API_BASE", "http://localhost:11434")
+class OpenAILLM(BaseLLM):
+    def __init__(self, model: str = "gpt-4o"):
+        self.client = instructor.from_openai(
+            AsyncOpenAI(),
+            mode=instructor.Mode.JSON,
+        )
+        self.model = model
 
-        validation = validate_environment(model)
-        if validation["missing_keys"]:
-            raise ValueError(f"Missing keys: {validation['missing_keys']}")
+    async def astream(self, prompt: str) -> str:
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            stream=True,
+        )
+        full_response = ""
+        async for chunk in response:
+            if chunk.choices[0].delta.content:
+                full_response += chunk.choices[0].delta.content
+        return full_response
 
-        self.llm = LiteLLM(model=model)
-        if 'groq' in model or 'ollama_chat' in model:
-            self.client = instructor.from_litellm(completion, mode=instructor.Mode.MD_JSON)
-        else:
-            self.client = instructor.from_litellm(completion)
+    def complete(self, prompt: str) -> str:
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.choices[0].message.content or ""
 
-    async def astream(self, prompt: str) -> CompletionResponseAsyncGen:
-        return await self.llm.astream_complete(prompt)
-
-    def complete(self, prompt: str) -> CompletionResponse:
-        return self.llm.complete(prompt)
-
-    def structured_complete(self, response_model: type[T], prompt: str) -> T:
+    def structured_complete(self, response_model: type[BaseModel], prompt: str) -> BaseModel:
         return self.client.chat.completions.create(
-            model=self.llm.model,
+            model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_model=response_model,
         )
