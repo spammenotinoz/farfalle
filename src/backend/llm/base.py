@@ -24,9 +24,13 @@ class BaseLLM(ABC):
 
 
 class OpenAILLM(BaseLLM):
-    def __init__(self, model: str = "gpt-4o"):
+    def __init__(self, model: str = "gemini-3-flash"):
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+
         self.client = instructor.from_openai(
-            AsyncOpenAI(),
+            AsyncOpenAI(api_key=api_key),
             mode=instructor.Mode.JSON,
         )
         self.model = model

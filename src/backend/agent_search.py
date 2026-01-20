@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from backend.chat import rephrase_query_with_history
 from backend.constants import get_model_string
 from backend.db.chat import save_turn_to_db
-from backend.llm.base import OpenAILLM
+from backend.llm.base import BaseLLM, OpenAILLM
 from backend.prompts import CHAT_PROMPT, QUERY_PLAN_PROMPT, SEARCH_QUERY_PROMPT
 from backend.related_queries import generate_related_queries
 from backend.schemas import (
@@ -302,7 +302,7 @@ async def stream_pro_search_qa(
             )
 
         model_name = get_model_string(request.model)
-        llm = OpenAILLM(model=model_name)
+        llm = GeminiLLM(model=model_name)
 
         query = rephrase_query_with_history(request.query, request.history, llm)
         async for event in stream_pro_search_objects(request, llm, query, session):

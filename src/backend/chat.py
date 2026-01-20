@@ -56,7 +56,7 @@ async def stream_qa_objects(
 ) -> AsyncIterator[ChatResponseEvent]:
     try:
         model_name = get_model_string(request.model)
-        llm = OpenAILLM(model=model_name)
+        llm = GeminiLLM(model=model_name)
 
         yield ChatResponseEvent(
             event=StreamEvent.BEGIN_STREAM,

@@ -22,7 +22,7 @@ export const createConfigSlice: StateCreator<
   [],
   ConfigStore
 > = (set) => ({
-  model: ChatModel.GPT_4O_MINI,
+  model: ChatModel.FAST,
   localMode: false,
   proMode: false,
   setModel: (model: ChatModel) => set({ model }),
@@ -34,7 +34,7 @@ export const createConfigSlice: StateCreator<
       }
 
       const newLocalMode = !state.localMode;
-	  const newModel = ChatModel.GPT_4O_MINI;
+	  const newModel = ChatModel.FAST;
 	  return { localMode: newLocalMode, model: newModel };
     }),
   toggleProMode: () =>

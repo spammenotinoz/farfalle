@@ -65,8 +65,9 @@ export type ChatMessage = {
 };
 
 export enum ChatModel {
-  GPT_4O = "gpt-4o",
-  GPT_4O_MINI = "gpt-4o-mini",
+  FAST = "gemini-2.5-flash-lite",
+  POWERFUL = "gemini-3-flash",
+  TECHNICAL = "gemini-3-flash",
 }
 
 export type ChatRequest = {

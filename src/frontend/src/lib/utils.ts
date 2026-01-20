@@ -12,7 +12,8 @@ export function isLocalModel(model: ChatModel) {
 
 export function isCloudModel(model: ChatModel) {
   return [
-    ChatModel.GPT_4O,
-    ChatModel.GPT_4O_MINI,
+    ChatModel.FAST,
+    ChatModel.POWERFUL,
+    ChatModel.TECHNICAL,
   ].includes(model);
 }
