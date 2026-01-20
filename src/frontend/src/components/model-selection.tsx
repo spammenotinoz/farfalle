@@ -60,7 +60,6 @@ const ModelItem: React.FC<{ model: Model }> = ({ model }) => (
       {model.icon}
       <div className="flex flex-col">
         <span className="font-bold">{model.name}</span>
-        <span className="text-muted-foreground">{model.description}</span>
       </div>
     </div>
   </SelectItem>
