@@ -1,6 +1,6 @@
 # Based on: https://github.com/cohere-ai/cohere-toolkit/blob/main/standalone.Dockerfile
 
-FROM buildpack-deps:buster as builder
+FROM buildpack-deps:bookworm as builder
 LABEL authors="rashadphz"
 
 
@@ -16,7 +16,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true
 
-RUN apt-get autoclean
+RUN apt-get update && apt-get autoclean
 
 # Install python
 RUN cd /usr/src \
@@ -46,11 +46,13 @@ COPY src/backend src/backend
 
 
 # Install nodejs
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+RUN apt-get update && apt-get install -y curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g pnpm \
     # pm2 to start frontend
-    && npm install -g pm2
+    && npm install -g pm2 \
+    && apt-get clean
 
 
 WORKDIR /workspace/src/frontend
