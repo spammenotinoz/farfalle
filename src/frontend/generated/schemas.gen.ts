@@ -286,6 +286,7 @@ export const $ChatModel = {
   enum: [
     "gemini-2.5-flash-lite",
     "gemini-3-flash",
+    "gemini-3-flash-technical",
   ],
   title: "ChatModel",
 } as const;

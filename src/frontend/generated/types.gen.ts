@@ -67,7 +67,7 @@ export type ChatMessage = {
 export enum ChatModel {
   FAST = "gemini-2.5-flash-lite",
   POWERFUL = "gemini-3-flash",
-  TECHNICAL = "gemini-3-flash",
+  TECHNICAL = "gemini-3-flash-technical",
 }
 
 export type ChatRequest = {
