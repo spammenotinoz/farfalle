@@ -29,8 +29,10 @@ class OpenAILLM(BaseLLM):
         if not api_key:
             raise ValueError("OPENAI_API_KEY environment variable not set")
 
+        base_url = os.environ.get("OPENAI_API_BASE")
+
         self.client = instructor.from_openai(
-            AsyncOpenAI(api_key=api_key),
+            AsyncOpenAI(api_key=api_key, base_url=base_url),
             mode=instructor.Mode.JSON,
         )
         self.model = model

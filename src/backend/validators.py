@@ -4,7 +4,7 @@ from backend.constants import ChatModel
 
 
 def validate_model(model: ChatModel):
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-    if not GOOGLE_API_KEY:
-        raise ValueError("GOOGLE_API_KEY environment variable not found")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if not OPENAI_API_KEY:
+        raise ValueError("OPENAI_API_KEY environment variable not found")
     return True
