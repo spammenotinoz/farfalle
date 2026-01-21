@@ -26,7 +26,7 @@ from backend.search.search_service import perform_search
 from backend.utils import is_local_model
 
 
-def rephrase_query_with_history(
+async def rephrase_query_with_history(
     question: str, history: List[Message], llm: BaseLLM
 ) -> str:
     if not history:
@@ -63,7 +63,7 @@ async def stream_qa_objects(
             data=BeginStream(query=request.query),
         )
 
-        query = rephrase_query_with_history(request.query, request.history, llm)
+        query = await rephrase_query_with_history(request.query, request.history, llm)
 
         search_response = await perform_search(query)
 
