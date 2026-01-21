@@ -12,6 +12,9 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 WORKDIR /workspace
 
+# Install poetry first
+RUN pip install --no-cache-dir poetry
+
 # Copy dependency files first for better caching
 COPY pyproject.toml poetry.lock ./
 COPY README.md ./
@@ -25,19 +28,31 @@ COPY src/backend src/backend
 
 
 FROM node:20-alpine as frontend
+LABEL authors="rashadphz"
+
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_LOCAL_MODE_ENABLED
+ARG NEXT_PUBLIC_PRO_MODE_ENABLED
+
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_LOCAL_MODE_ENABLED=${NEXT_PUBLIC_LOCAL_MODE_ENABLED}
+ENV NEXT_PUBLIC_PRO_MODE_ENABLED=${NEXT_PUBLIC_PRO_MODE_ENABLED}
 
 WORKDIR /app
 
-# Copy dependency files
+# Copy package files
 COPY src/frontend/package.json src/frontend/pnpm-lock.yaml ./
 
-# Install dependencies and build
+# Install dependencies (including dev for build)
 RUN npm install -g pnpm && \
-    pnpm install --frozen-lockfile && \
-    pnpm build
+    pnpm install --frozen-lockfile
 
-# Final stage
-FROM python:3.11-slim-bookworm
+# Copy source and build
+COPY src/frontend/ .
+RUN pnpm build
+
+
+FROM python:3.11-slim-bookworm as runtime
 LABEL authors="rashadphz"
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -61,13 +76,11 @@ COPY --from=builder /workspace/.venv /workspace/.venv
 # Copy backend
 COPY --from=builder /workspace/src/backend /workspace/src/backend
 
-# Copy frontend build from frontend stage
-COPY --from=frontend /app/public /workspace/src/frontend/public
-COPY --from=frontend /app/.next /workspace/src/frontend/.next
-COPY --from=frontend /app/next.config.mjs /workspace/src/frontend/next.config.mjs
-
-# Install Next.js for standalone output
+# Copy built frontend application and dependencies
 COPY --from=frontend /app/node_modules /workspace/src/frontend/node_modules
+COPY --from=frontend /app/.next /workspace/src/frontend/.next
+COPY --from=frontend /app/public /workspace/src/frontend/public
+COPY --from=frontend /app/next.config.mjs /workspace/src/frontend/next.config.mjs
 COPY --from=frontend /app/package.json /workspace/src/frontend/package.json
 
 COPY docker-scripts/entrypoint.sh /workspace/sbin/entrypoint.sh
