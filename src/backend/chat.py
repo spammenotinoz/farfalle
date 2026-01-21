@@ -37,7 +37,7 @@ def rephrase_query_with_history(
         formatted_query = HISTORY_QUERY_REPHRASE.format(
             chat_history=history_str, question=question
         )
-        question = llm.complete(formatted_query).replace('"', "")
+        question = (await llm.complete(formatted_query)).replace('"', "")
         return question
     except Exception:
         raise HTTPException(

@@ -15,11 +15,11 @@ class BaseLLM(ABC):
         pass
 
     @abstractmethod
-    def complete(self, prompt: str) -> str:
+    async def complete(self, prompt: str) -> str:
         pass
 
     @abstractmethod
-    def structured_complete(self, response_model: type[BaseModel], prompt: str) -> BaseModel:
+    async def structured_complete(self, response_model: type[BaseModel], prompt: str) -> BaseModel:
         pass
 
 
@@ -31,7 +31,7 @@ class OpenAILLM(BaseLLM):
 
         base_url = os.environ.get("OPENAI_API_BASE")
 
-        self.client = instructor.from_openai(
+        self.client = instructor.apatch(
             AsyncOpenAI(api_key=api_key, base_url=base_url),
             mode=instructor.Mode.JSON,
         )
@@ -49,16 +49,17 @@ class OpenAILLM(BaseLLM):
                 full_response += chunk.choices[0].delta.content
         return full_response
 
-    def complete(self, prompt: str) -> str:
-        response = self.client.chat.completions.create(
+    async def complete(self, prompt: str) -> str:
+        response = await self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
         )
         return response.choices[0].message.content or ""
 
-    def structured_complete(self, response_model: type[BaseModel], prompt: str) -> BaseModel:
-        return self.client.chat.completions.create(
+    async def structured_complete(self, response_model: type[BaseModel], prompt: str) -> BaseModel:
+        response = await self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_model=response_model,
         )
+        return response

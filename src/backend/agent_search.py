@@ -112,7 +112,7 @@ async def stream_pro_search_objects(
     request: ChatRequest, llm: BaseLLM, query: str, session: Session
 ) -> AsyncIterator[ChatResponseEvent]:
     query_plan_prompt = QUERY_PLAN_PROMPT.format(query=query)
-    query_plan = llm.structured_complete(
+    query_plan = await llm.structured_complete(
         response_model=QueryPlan, prompt=query_plan_prompt
     )
     print(query_plan)
@@ -140,7 +140,7 @@ async def stream_pro_search_objects(
                 current_step=step.step,
                 prev_steps_context=format_step_context(relevant_context),
             )
-            query_step_execution = llm.structured_complete(
+            query_step_execution = await llm.structured_complete(
                 response_model=QueryStepExecution, prompt=search_prompt
             )
             search_queries = query_step_execution.search_queries

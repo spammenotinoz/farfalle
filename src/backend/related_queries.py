@@ -8,7 +8,7 @@ async def generate_related_queries(
 ) -> list[str]:
     context = "\n\n".join([f"{str(result)}" for result in search_results])
     context = context[:4000]
-    related = llm.structured_complete(
+    related = await llm.structured_complete(
         RelatedQueries, RELATED_QUESTION_PROMPT.format(query=query, context=context)
     )
 
