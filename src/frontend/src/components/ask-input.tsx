@@ -88,8 +88,7 @@ const InputBar = ({
       setIsRecording(true);
       setRecordingTime(0);
       if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-        const SpeechRecognition =
-          window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
@@ -342,8 +341,7 @@ const FollowingUpInput = ({
       setIsRecording(true);
       setRecordingTime(0);
       if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-        const SpeechRecognition =
-          window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;

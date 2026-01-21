@@ -203,12 +203,13 @@ export const ProSearchRender = ({
         <Timeline className="w-full">
           {stepDetails.map(({ step, queries, results, status }, index) => {
             const isLast = index === stepDetails.length - 1;
+            const stepStatus = status ?? AgentSearchStepStatus.DEFAULT;
             return (
               <TimelineItem key={index} status="default">
                 <TimelineDot className="mt-1">
-                  {getStatusIcon(status)}
+                  {getStatusIcon(stepStatus)}
                 </TimelineDot>
-                {!isLast && <TimelineLine done={status === AgentSearchStepStatus.DONE} />}
+                {!isLast && <TimelineLine done={stepStatus === AgentSearchStepStatus.DONE} />}
                 <TimelineContent className="w-full pb-4">
                   <Accordion
                     type="multiple"

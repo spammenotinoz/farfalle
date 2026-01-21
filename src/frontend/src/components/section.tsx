@@ -30,7 +30,7 @@ export const Section = ({
     Images: CameraIcon,
   };
 
-  const IconComponent = icon || iconMap[title] || StarIcon;
+  const IconComponent = Icon || iconMap[title] || StarIcon;
 
   return (
     <motion.div
