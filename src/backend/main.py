@@ -4,14 +4,10 @@ import os
 import traceback
 from typing import Generator
 
-import logfire
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter
-from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_ipaddr
 from sqlalchemy.orm import Session
 from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
@@ -44,34 +40,6 @@ def create_error_event(detail: str):
     )
 
 
-def configure_logging(app: FastAPI, logfire_token: str | None):
-    if logfire_token:
-        logfire.configure()
-        logfire.instrument_fastapi(app)
-
-
-async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
-    def generator():
-        yield create_error_event("Rate limit exceeded, please try again later.")
-
-    return EventSourceResponse(
-        generator(),
-        media_type="text/event-stream",
-    )
-
-
-def configure_rate_limiting(
-    app: FastAPI, rate_limit_enabled: bool, redis_url: str | None
-):
-    limiter = Limiter(
-        key_func=get_ipaddr,
-        enabled=strtobool(rate_limit_enabled) and redis_url is not None,
-        storage_uri=redis_url,
-    )
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore
-
-
 def configure_middleware(app: FastAPI):
     app.add_middleware(
         CORSMiddleware,
@@ -85,12 +53,6 @@ def configure_middleware(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI()
     configure_middleware(app)
-    configure_logging(app, os.getenv("LOGFIRE_TOKEN"))
-    configure_rate_limiting(
-        app,
-        strtobool(os.getenv("RATE_LIMIT_ENABLED", False)),
-        os.getenv("REDIS_URL"),
-    )
     return app
 
 
@@ -98,7 +60,6 @@ app = create_app()
 
 
 @app.post("/chat")
-@app.state.limiter.limit("4/min")
 async def chat(
     chat_request: ChatRequest, request: Request, session: Session = Depends(get_session)
 ) -> Generator[ChatResponseEvent, None, None]:
