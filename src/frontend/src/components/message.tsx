@@ -1,11 +1,11 @@
-import React, { FC, memo, useEffect, useMemo, useState } from "react";
+import React, { FC, memo, useEffect, useState, useMemo } from "react";
 import { MemoizedReactMarkdown } from "./markdown";
 import rehypeRaw from "rehype-raw";
 
 import _ from "lodash";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "./ui/skeleton";
-import { ChatMessage } from "../../generated";
+import { ChatMessage, SearchResult } from "../../generated";
 
 function chunkString(str: string): string[] {
   const words = str.split(" ");
@@ -18,17 +18,41 @@ export interface MessageProps {
   isStreaming?: boolean;
 }
 
-const CitationText = ({ number, href }: { number: number; href: string }) => {
-  return `
-  <button className="select-none no-underline">
-  <a className="" href="${href}" target="_blank">
-        <span className="relative -top-[0rem] inline-flex">
-          <span className="h-[1rem] min-w-[1rem] items-center justify-center rounded-full  text-center px-1 text-xs font-mono bg-muted text-[0.60rem] text-muted-foreground">
-            ${number}
-          </span>
+// Citation component that properly renders links
+const CitationLink = ({
+  number,
+  url,
+  title,
+}: {
+  number: number;
+  url: string;
+  title?: string;
+}) => {
+  if (!url) {
+    return (
+      <sup className="inline-flex items-center justify-center mx-0.5">
+        <span className="h-[1rem] min-w-[1rem] items-center justify-center rounded-full text-center px-1.5 text-xs font-mono bg-muted text-muted-foreground select-none">
+          {number}
+        </span>
+      </sup>
+    );
+  }
+
+  return (
+    <sup className="inline-flex items-center justify-center mx-0.5">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+        title={title || url}
+      >
+        <span className="h-[1rem] min-w-[1rem] items-center justify-center rounded-full text-center px-1.5 text-xs font-mono bg-muted text-muted-foreground hover:bg-muted/80">
+          {number}
         </span>
       </a>
-    </button>`;
+    </sup>
+  );
 };
 
 const Text = ({
@@ -115,42 +139,71 @@ Paragraph.displayName = "Paragraph";
 ListItem.displayName = "ListItem";
 StreamingListItem.displayName = "StreamingListItem";
 
+// Process content to replace [1], [2], etc. with citation components
+const processContentWithCitations = (
+  content: string,
+  sources: SearchResult[] | null | undefined,
+): React.ReactNode => {
+  const citationRegex = /\[(\d+)\]/g;
+  const elements: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = citationRegex.exec(content)) !== null) {
+    // Add text before the citation
+    const textBefore = content.slice(lastIndex, match.index);
+    if (textBefore) {
+      elements.push(
+        <Text key={`text-${lastIndex}`} isStreaming={false} containerElement="span">
+          {textBefore}
+        </Text>,
+      );
+    }
+
+    // Parse citation number
+    const number = parseInt(match[1], 10);
+    const source = sources?.[number - 1];
+
+    elements.push(
+      <CitationLink
+        key={`citation-${number}-${lastIndex}`}
+        number={number}
+        url={source?.url ?? ""}
+        title={source?.title}
+      />,
+    );
+
+    lastIndex = citationRegex.lastIndex;
+  }
+
+  // Add remaining text
+  const remainingText = content.slice(lastIndex);
+  if (remainingText) {
+    elements.push(
+      <Text key={`text-${lastIndex}`} isStreaming={false} containerElement="span">
+        {remainingText}
+      </Text>,
+    );
+  }
+
+  return elements;
+};
+
 export const MessageComponent: FC<MessageProps> = ({
   message,
   isStreaming = false,
 }) => {
   const { content, sources } = message;
-  const [parsedMessage, setParsedMessage] = useState<string>(content);
 
-  useEffect(() => {
-    const citationRegex = /(\[\d+\])/g;
-    const newMessage = content.replace(citationRegex, (match) => {
-      const number = match.slice(1, -1);
-      const source = sources?.find(
-        (source, idx) => idx + 1 === parseInt(number),
-      );
-      return CitationText({
-        number: parseInt(number),
-        href: source?.url ?? "",
-      });
-    });
-    setParsedMessage(newMessage);
-  }, [content, sources]);
+  const processedContent = useMemo(
+    () => processContentWithCitations(content, sources),
+    [content, sources],
+  );
 
   return (
-    <MemoizedReactMarkdown
-      components={{
-        // TODO: For some reason, can't pass props into the components
-        // @ts-ignore
-        p: isStreaming ? StreamingParagraph : Paragraph,
-        // @ts-ignore
-        li: isStreaming ? StreamingListItem : ListItem,
-      }}
-      className="prose dark:prose-invert inline leading-relaxed break-words "
-      rehypePlugins={[rehypeRaw]}
-    >
-      {parsedMessage}
-    </MemoizedReactMarkdown>
+    <div className="leading-relaxed break-words">
+      {processedContent}
+    </div>
   );
 };
 
