@@ -8,6 +8,7 @@ import {
   MessageRole,
 } from "../../generated";
 import { ProSearchRender } from "./pro-search-render";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MessagesList = ({
   messages,
@@ -23,39 +24,71 @@ const MessagesList = ({
   onRelatedQuestionSelect: (question: string) => void;
 }) => {
   const streamingProResponse = streamingMessage?.agent_response;
+
   return (
     <div className="flex flex-col pb-28">
-      {messages.map((message, index) =>
-        message.role === MessageRole.USER ? (
-          <UserMessageContent key={index} message={message} />
-        ) : (
-          <>
-            {message.agent_response && (
-              <ProSearchRender streamingProResponse={message.agent_response} />
-            )}
-            <AssistantMessageContent
-              key={index}
-              message={message}
-              onRelatedQuestionSelect={onRelatedQuestionSelect}
-            />
-            {index !== messages.length - 1 && <Separator />}
-          </>
-        ),
-      )}
+      <AnimatePresence>
+        {messages.map((message, index) =>
+          message.role === MessageRole.USER ? (
+            <motion.div
+              key={`user-${index}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <UserMessageContent message={message} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key={`assistant-${index}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {message.agent_response && (
+                <ProSearchRender streamingProResponse={message.agent_response} />
+              )}
+              <AssistantMessageContent
+                message={message}
+                onRelatedQuestionSelect={onRelatedQuestionSelect}
+              />
+              {index !== messages.length - 1 && (
+                <Separator className="my-8 opacity-50" />
+              )}
+            </motion.div>
+          ),
+        )}
+      </AnimatePresence>
+
       {isStreamingProSearch && (
-        <div className="mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+        >
           <ProSearchRender
             streamingProResponse={streamingProResponse ?? null}
             isStreamingProSearch={isStreamingProSearch}
           />
-        </div>
+        </motion.div>
       )}
+
       {streamingMessage && isStreamingMessage && (
-        <AssistantMessageContent
-          message={streamingMessage}
-          isStreaming={true}
-          onRelatedQuestionSelect={onRelatedQuestionSelect}
-        />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="space-y-6"
+        >
+          <AssistantMessageContent
+            message={streamingMessage}
+            isStreaming={true}
+            onRelatedQuestionSelect={onRelatedQuestionSelect}
+          />
+        </motion.div>
       )}
     </div>
   );

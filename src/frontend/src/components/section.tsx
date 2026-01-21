@@ -5,6 +5,7 @@ import {
   SparkleIcon,
   StarIcon,
   TextSearchIcon,
+  BotIcon,
 } from "lucide-react";
 
 import { motion } from "framer-motion";
@@ -14,42 +15,46 @@ export const Section = ({
   children,
   animate = true,
   streaming = false,
+  icon: Icon,
 }: {
   title: "Sources" | "Answer" | "Related" | "Images";
   children: React.ReactNode;
   animate?: boolean;
   streaming?: boolean;
+  icon?: React.ComponentType<{ size?: number }>;
 }) => {
   const iconMap = {
     Sources: TextSearchIcon,
-    Answer: SparkleIcon,
+    Answer: BotIcon,
     Related: ListPlusIcon,
     Images: CameraIcon,
   };
 
-  const IconComponent = iconMap[title] || StarIcon;
+  const IconComponent = icon || iconMap[title] || StarIcon;
 
   return (
-    <div
+    <motion.div
+      initial={animate ? { opacity: 0, y: 20 } : undefined}
+      animate={animate ? { opacity: 1, y: 0 } : undefined}
+      transition={animate ? { duration: 0.4 } : undefined}
       className={cn(
         "flex flex-col mb-8",
-        animate ? "animate-in fade-in duration-1000 ease-out" : "",
       )}
     >
-      <div className="flex items-center space-x-2">
-        {title === "Answer" && streaming ? (
+      <div className="flex items-center space-x-2 mb-4">
+        {streaming ? (
           <motion.div
             animate={{ rotate: [0, 360] }}
             transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
           >
-            <IconComponent size={22} />
+            <IconComponent size={20} className="text-tint" />
           </motion.div>
         ) : (
-          <IconComponent size={22} />
+          <IconComponent size={20} className="text-tint/80" />
         )}
-        <div className="text-lg font-medium">{title}</div>
+        <div className="text-base font-medium text-foreground/90">{title}</div>
       </div>
-      <div className="pt-1">{children}</div>
-    </div>
+      <div className="pl-7">{children}</div>
+    </motion.div>
   );
 };

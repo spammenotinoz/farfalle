@@ -98,11 +98,21 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
     <>
       {messages.length > 0 || threadId ? (
         isLoading ? (
-          <div className="w-full flex justify-center items-center">
-            <LoaderIcon className="animate-spin w-8 h-8" />
+          <div className="w-full flex justify-center items-center min-h-[60vh]">
+            <div className="flex flex-col items-center gap-3">
+              <LoaderIcon className="animate-spin w-8 h-8 text-tint" />
+              <p className="text-sm text-muted-foreground">Loading conversation...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="w-full flex justify-center items-center min-h-[60vh]">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <p className="text-destructive">Failed to load conversation</p>
+              <p className="text-sm text-muted-foreground">{error.message}</p>
+            </div>
           </div>
         ) : (
-          <div ref={messagesRef} className="pt-10 w-full relative">
+          <div ref={messagesRef} className="pt-4 pb-40 w-full relative">
             <MessagesList
               messages={messages}
               streamingMessage={streamingMessage}
@@ -112,21 +122,41 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
             />
             <div ref={messageBottomRef} className="h-0" />
             <div
-              className="bottom-12 fixed px-2 max-w-screen-md justify-center items-center md:px-2"
-              style={{ width: `${width}px` }}
+              className="fixed bottom-0 left-0 right-0 px-4 md:px-8 bg-gradient-to-t from-background via-background to-transparent pt-8 pb-4"
+              style={{ width: `${width}px`, margin: '0 auto', maxWidth: 'calc(100vw - 2rem)' }}
             >
-              <AskInput isFollowingUp sendMessage={handleSend} />
+              <div className="max-w-screen-md mx-auto">
+                <AskInput isFollowingUp sendMessage={handleSend} />
+              </div>
             </div>
           </div>
         )
       ) : (
-        <div className="w-full flex flex-col justify-center items-center">
-          <div className="flex items-center justify-center mb-8">
-            <span className="text-3xl">Ask anything</span>
+        <div className="w-full flex flex-col justify-center items-center min-h-[calc(100vh-8rem)]">
+          <div className="flex flex-col items-center justify-center mb-10 space-y-3">
+            <h1 className="text-4xl md:text-5xl font-bold text-center bg-gradient-to-r from-tint to-tint/60 bg-clip-text text-transparent">
+              Ask anything
+            </h1>
+            <p className="text-muted-foreground text-center max-w-md">
+              Search the web, get answers, and chat with an AI that knows the world.
+            </p>
           </div>
-          <AskInput sendMessage={handleSend} />
-          <div className="w-full flex flex-row px-3 justify-between space-y-2 pt-1">
-            <StarterQuestionsList handleSend={handleSend} />
+          <div className="w-full max-w-lg">
+            <AskInput sendMessage={handleSend} />
+            <div className="mt-6">
+              <StarterQuestionsList handleSend={handleSend} />
+            </div>
+          </div>
+          <div className="mt-8 flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-muted rounded-md font-mono">Ctrl</kbd>
+              <kbd className="px-2 py-1 bg-muted rounded-md font-mono">Enter</kbd>
+              to search
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-muted rounded-md font-mono">?</kbd>
+              for shortcuts
+            </span>
           </div>
         </div>
       )}

@@ -12,6 +12,9 @@ import {
 import {
   BrainIcon,
   RabbitIcon,
+  Zap,
+  Cpu,
+  Terminal,
 } from "lucide-react";
 import { useConfigStore, useChatStore } from "@/stores";
 import { ChatModel } from "../../generated";
@@ -19,6 +22,7 @@ import { isCloudModel, isLocalModel } from "@/lib/utils";
 
 import _ from "lodash";
 import { env } from "@/env.mjs";
+import { motion } from "framer-motion";
 
 type Model = {
   name: string;
@@ -26,6 +30,7 @@ type Model = {
   value: string;
   smallIcon: React.ReactNode;
   icon: React.ReactNode;
+  color: string;
 };
 
 export const modelMap: Record<ChatModel, Model> = {
@@ -33,22 +38,25 @@ export const modelMap: Record<ChatModel, Model> = {
     name: "Fast",
     description: "Google/Gemini-2.5-Flash-Lite",
     value: ChatModel.FAST,
-    smallIcon: <RabbitIcon className="w-4 h-4 text-cyan-500" />,
-    icon: <RabbitIcon className="w-5 h-5 text-cyan-500" />,
+    smallIcon: <Zap className="w-4 h-4" />,
+    icon: <Zap className="w-5 h-5" />,
+    color: "text-cyan-500",
   },
   [ChatModel.POWERFUL]: {
     name: "Powerful",
     description: "Google/Gemini-3-Flash",
     value: ChatModel.POWERFUL,
-    smallIcon: <BrainIcon className="w-4 h-4 text-pink-500" />,
-    icon: <BrainIcon className="w-5 h-5 text-pink-500" />,
+    smallIcon: <Cpu className="w-4 h-4" />,
+    icon: <Cpu className="w-5 h-5" />,
+    color: "text-pink-500",
   },
   [ChatModel.TECHNICAL]: {
     name: "Technical",
     description: "Google/Gemini-3-Flash",
     value: ChatModel.TECHNICAL,
-    smallIcon: <BrainIcon className="w-4 h-4 text-yellow-500" />,
-    icon: <BrainIcon className="w-5 h-5 text-yellow-500" />,
+    smallIcon: <Terminal className="w-4 h-4" />,
+    icon: <Terminal className="w-5 h-5" />,
+    color: "text-yellow-500",
   },
 };
 
@@ -61,12 +69,15 @@ const ModelItem: React.FC<{ model: Model }> = ({ model }) => (
   <SelectItem
     key={model.value}
     value={model.value}
-    className="flex flex-col items-start p-2"
+    className="flex flex-col items-start p-3"
   >
-    <div className="flex items-center space-x-2">
-      {model.icon}
+    <div className="flex items-center space-x-3 w-full">
+      <div className={`p-2 rounded-lg bg-muted ${model.color}`}>
+        {model.icon}
+      </div>
       <div className="flex flex-col">
-        <span className="font-bold">{model.name}</span>
+        <span className="font-semibold">{model.name}</span>
+        <span className="text-xs text-muted-foreground">{model.description}</span>
       </div>
     </div>
   </SelectItem>
@@ -86,16 +97,21 @@ export function ModelSelection() {
         }
       }}
     >
-      <SelectTrigger className="w-fit space-x-2 bg-transparent outline-none border-none select-none focus:ring-0 shadow-none transition-all duration-200 ease-in-out hover:scale-[1.05] text-sm">
+      <SelectTrigger className="w-fit space-x-2 bg-transparent outline-none border-none select-none focus:ring-0 shadow-none transition-all duration-200 ease-in-out text-sm h-8 px-2 hover:bg-muted/50 rounded-md">
         <SelectValue>
           <div className="flex items-center space-x-2">
-            {selectedModel.smallIcon}
-            <span className="font-semibold">{selectedModel.name}</span>
+            <div className={`${selectedModel.color}`}>
+              {selectedModel.smallIcon}
+            </div>
+            <span className="font-medium">{selectedModel.name}</span>
           </div>
         </SelectValue>
       </SelectTrigger>
-      <SelectContent className="w-[250px]">
+      <SelectContent className="w-[280px]">
         <SelectGroup className="w-full">
+          <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Available Models
+          </div>
           {Object.values(cloudModelMap).map((model) => (
             <ModelItem key={model.value} model={model} />
           ))}
