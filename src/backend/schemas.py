@@ -6,16 +6,12 @@ from enum import Enum
 from typing import List, Union
 
 from dotenv import load_dotenv
-from logfire.integrations.pydantic import PluginSettings
 from pydantic import BaseModel, Field
 
 from backend.constants import ChatModel
 from backend.utils import strtobool
 
 load_dotenv()
-
-
-record_all = PluginSettings(logfire={"record": "all"})
 
 
 class MessageRole(str, Enum):
@@ -31,7 +27,7 @@ class Message(BaseModel):
 LOCAL_MODELS_ENABLED = strtobool(os.getenv("ENABLE_LOCAL_MODELS", False))
 
 
-class ChatRequest(BaseModel, plugin_settings=record_all):
+class ChatRequest(BaseModel):
     thread_id: int | None = None
     query: str
     history: List[Message] = Field(default_factory=list)
@@ -97,12 +93,12 @@ class ChatObject(BaseModel):
     event_type: StreamEvent
 
 
-class BeginStream(ChatObject, plugin_settings=record_all):
+class BeginStream(ChatObject):
     event_type: StreamEvent = StreamEvent.BEGIN_STREAM
     query: str
 
 
-class SearchResultStream(ChatObject, plugin_settings=record_all):
+class SearchResultStream(ChatObject):
     event_type: StreamEvent = StreamEvent.SEARCH_RESULTS
     results: List[SearchResult] = Field(default_factory=list)
     images: List[str] = Field(default_factory=list)
@@ -113,49 +109,49 @@ class TextChunkStream(ChatObject):
     text: str
 
 
-class RelatedQueriesStream(ChatObject, plugin_settings=record_all):
+class RelatedQueriesStream(ChatObject):
     event_type: StreamEvent = StreamEvent.RELATED_QUERIES
     related_queries: List[str] = Field(default_factory=list)
 
 
-class StreamEndStream(ChatObject, plugin_settings=record_all):
+class StreamEndStream(ChatObject):
     thread_id: int | None = None
     event_type: StreamEvent = StreamEvent.STREAM_END
 
 
-class FinalResponseStream(ChatObject, plugin_settings=record_all):
+class FinalResponseStream(ChatObject):
     event_type: StreamEvent = StreamEvent.FINAL_RESPONSE
     message: str
 
 
-class ErrorStream(ChatObject, plugin_settings=record_all):
+class ErrorStream(ChatObject):
     event_type: StreamEvent = StreamEvent.ERROR
     detail: str
 
 
-class AgentQueryPlanStream(ChatObject, plugin_settings=record_all):
+class AgentQueryPlanStream(ChatObject):
     event_type: StreamEvent = StreamEvent.AGENT_QUERY_PLAN
     steps: List[str] = Field(default_factory=list)
 
 
-class AgentSearchQueriesStream(ChatObject, plugin_settings=record_all):
+class AgentSearchQueriesStream(ChatObject):
     event_type: StreamEvent = StreamEvent.AGENT_SEARCH_QUERIES
     step_number: int
     queries: List[str] = Field(default_factory=list)
 
 
-class AgentReadResultsStream(ChatObject, plugin_settings=record_all):
+class AgentReadResultsStream(ChatObject):
     event_type: StreamEvent = StreamEvent.AGENT_READ_RESULTS
     step_number: int
     results: List[SearchResult] = Field(default_factory=list)
 
 
-class AgentSearchFullResponseStream(ChatObject, plugin_settings=record_all):
+class AgentSearchFullResponseStream(ChatObject):
     event_type: StreamEvent = StreamEvent.AGENT_FULL_RESPONSE
     response: AgentSearchFullResponse
 
 
-class AgentFinishStream(ChatObject, plugin_settings=record_all):
+class AgentFinishStream(ChatObject):
     event_type: StreamEvent = StreamEvent.AGENT_FINISH
 
 
