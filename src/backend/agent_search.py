@@ -302,7 +302,7 @@ async def stream_pro_search_qa(
             )
 
         model_name = get_model_string(request.model)
-        llm = GeminiLLM(model=model_name)
+        llm = OpenAILLM(model=model_name)
 
         query = rephrase_query_with_history(request.query, request.history, llm)
         async for event in stream_pro_search_objects(request, llm, query, session):
