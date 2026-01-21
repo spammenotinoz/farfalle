@@ -1,7 +1,6 @@
 import json
 import os
 
-import redis
 from dotenv import load_dotenv
 from fastapi import HTTPException
 
@@ -10,13 +9,8 @@ from backend.search.providers.base import SearchProvider
 from backend.search.providers.bing import BingSearchProvider
 from backend.search.providers.searxng import SearxngSearchProvider
 from backend.search.providers.serper import SerperSearchProvider
-from backend.search.providers.tavily import TavilySearchProvider
 
 load_dotenv()
-
-
-redis_url = os.getenv("REDIS_URL")
-redis_client = redis.Redis.from_url(redis_url) if redis_url else None
 
 
 def get_searxng_base_url():
@@ -68,6 +62,8 @@ def get_search_provider() -> SearchProvider:
             return SearxngSearchProvider(searxng_base_url)
         case "tavily":
             tavily_api_key = get_tavily_api_key()
+            from backend.search.providers.tavily import TavilySearchProvider
+
             return TavilySearchProvider(tavily_api_key)
         case "serper":
             serper_api_key = get_serper_api_key()
@@ -86,16 +82,7 @@ async def perform_search(query: str) -> SearchResponse:
     search_provider = get_search_provider()
 
     try:
-        cache_key = f"search:{query}"
-        if redis_client and (cached_results := redis_client.get(cache_key)):
-            cached_json = json.loads(json.loads(cached_results.decode("utf-8")))  # type: ignore
-            return SearchResponse(**cached_json)
-
         results = await search_provider.search(query)
-
-        if redis_client:
-            redis_client.set(cache_key, json.dumps(results.model_dump_json()), ex=7200)
-
         return results
     except Exception:
         raise HTTPException(
