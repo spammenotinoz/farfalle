@@ -3,8 +3,7 @@
 import TextareaAutosize from "react-textarea-autosize";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "./ui/button";
-import { ArrowUp, Mic, ImagePlus, X, Sparkles, ChevronDown } from "lucide-react";
-import ProToggle from "./pro-toggle";
+import { ArrowUp, Mic, ImagePlus, X } from "lucide-react";
 import { ModelSelection } from "./model-selection";
 import {
   Tooltip,
@@ -12,14 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 import { motion, AnimatePresence } from "framer-motion";
-import { useConfigStore } from "@/stores";
 
 interface Attachment {
   id: string;
@@ -46,7 +38,6 @@ const InputBar = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const { proMode } = useConfigStore();
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,25 +246,6 @@ const InputBar = ({
       <div className="flex items-center justify-between px-3 py-2 border-t bg-muted/20">
         <div className="flex items-center gap-2">
           <ModelSelection />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                <Sparkles size={14} className="mr-1" />
-                {proMode ? "Expert" : "Quick"}
-                <ChevronDown size={12} className="ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem onClick={() => {}}>
-                <Sparkles size={14} className="mr-2" />
-                Quick Search - Fast response
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {}}>
-                <Sparkles size={14} className="mr-2" />
-                Expert Search - More thorough
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">

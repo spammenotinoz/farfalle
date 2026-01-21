@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ModeToggle } from "./mode-toggle";
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
-import { HistoryIcon, PlusIcon, Search, Command } from "lucide-react";
+import { PlusIcon, Search, Command } from "lucide-react";
 import { useChatStore } from "@/stores";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -118,17 +118,6 @@ export function Navbar() {
                   </div>
                 </DialogContent>
               </Dialog>
-            )}
-
-            {onHomePage && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground"
-                onClick={() => router.push("/history")}
-              >
-                <HistoryIcon className="w-5 h-5" />
-              </Button>
             )}
 
             <ModeToggle />
