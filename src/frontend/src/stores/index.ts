@@ -29,6 +29,7 @@ export const useChatStore = () =>
     setMessages: state.setMessages,
     threadId: state.threadId,
     setThreadId: state.setThreadId,
+    clearMessages: state.clearMessages,
   }));
 
 export const useConfigStore = () =>

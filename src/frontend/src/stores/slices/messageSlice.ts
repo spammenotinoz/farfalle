@@ -10,6 +10,7 @@ type Actions = {
   addMessage: (message: ChatMessage) => void;
   setThreadId: (threadId: number | null) => void;
   setMessages: (messages: ChatMessage[]) => void;
+  clearMessages: () => void;
 };
 
 export type ChatStore = State & Actions;
@@ -23,4 +24,5 @@ export const createMessageSlice: StateCreator<ChatStore, [], [], ChatStore> = (
     set((state) => ({ messages: [...state.messages, message] })),
   setThreadId: (threadId: number | null) => set((state) => ({ threadId })),
   setMessages: (messages: ChatMessage[]) => set((state) => ({ messages })),
+  clearMessages: () => set((state) => ({ messages: [], threadId: null })),
 });
