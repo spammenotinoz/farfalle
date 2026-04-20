@@ -60,6 +60,14 @@ RUN pnpm build
 FROM python:3.11-slim-bookworm as runtime
 LABEL authors="rashadphz"
 
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_LOCAL_MODE_ENABLED
+ARG NEXT_PUBLIC_PRO_MODE_ENABLED
+
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_LOCAL_MODE_ENABLED=${NEXT_PUBLIC_LOCAL_MODE_ENABLED}
+ENV NEXT_PUBLIC_PRO_MODE_ENABLED=${NEXT_PUBLIC_PRO_MODE_ENABLED}
+
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONIOENCODING=utf-8
@@ -79,6 +87,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install pnpm globally in runtime
 RUN npm install -g pnpm
+
+# Also write .env into the frontend dir so Next.js finds it at runtime
+RUN echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" > /workspace/src/frontend/.env && \
+    echo "NEXT_PUBLIC_LOCAL_MODE_ENABLED=${NEXT_PUBLIC_LOCAL_MODE_ENABLED}" >> /workspace/src/frontend/.env && \
+    echo "NEXT_PUBLIC_PRO_MODE_ENABLED=${NEXT_PUBLIC_PRO_MODE_ENABLED}" >> /workspace/src/frontend/.env
 
 # Copy Python virtualenv from builder
 COPY --from=builder /workspace/.venv /workspace/.venv
