@@ -42,6 +42,8 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/spammenotinoz/${{ env.IMAGE_NAME }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -49,3 +51,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           file: ./standalone.Dockerfile
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.farfalle.dev
+            NEXT_PUBLIC_LOCAL_MODE_ENABLED=true
+            NEXT_PUBLIC_PRO_MODE_ENABLED=true
