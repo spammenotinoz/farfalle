@@ -92,13 +92,15 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
       setThreadId(null);
       handleSend(queryMessage);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryMessage]);
 
   useEffect(() => {
     if (!thread) return;
     setThreadId(thread.thread_id);
     setMessages(thread.messages || []);
-  }, [threadId, thread, setMessages, setThreadId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId, thread]);
 
   useEffect(() => {
     if (messages.length === 0) setThreadId(null);

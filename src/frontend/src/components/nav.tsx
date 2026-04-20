@@ -5,9 +5,8 @@ import { ModeToggle } from "./mode-toggle";
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
 import { PlusIcon } from "lucide-react";
-import { useChatStore } from "@/stores";
+import { useChatStore, chatStore } from "@/stores";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const router = useRouter();
@@ -20,6 +19,7 @@ export function Navbar() {
       <div className="mx-auto flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={theme === "light" ? "/logo-black.png" : "/logo-white.png"}
             alt="Logo"
@@ -39,7 +39,7 @@ export function Navbar() {
               size="sm"
               className="gap-1.5 text-sm"
               onClick={() => {
-                useChatStore.getState().clearMessages();
+                chatStore.getState().clearMessages();
                 router.push("/");
               }}
             >

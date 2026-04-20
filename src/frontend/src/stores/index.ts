@@ -32,6 +32,9 @@ export const useChatStore = () =>
     clearMessages: state.clearMessages,
   }));
 
+/** Raw store — use for imperative access (e.g. getState, subscribe) */
+export const chatStore = useStore;
+
 export const useConfigStore = () =>
   useStore((state) => ({
     localMode: state.localMode,

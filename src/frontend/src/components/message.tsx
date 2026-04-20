@@ -44,6 +44,7 @@ const CitationBadge = memo(({ number, url, title }: CitationBadgeProps) => {
         <div className="bg-card border rounded-lg overflow-hidden shadow-xl">
           <div className="p-2.5 border-b bg-muted/40">
             <div className="flex items-center gap-2 mb-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="w-4 h-4 rounded"
                 src={`https://www.google.com/s2/favicons?sz=16&domain=${url}`}
