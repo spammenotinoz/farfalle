@@ -178,7 +178,7 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
           className="fixed bottom-0 left-0 right-0 px-4 md:px-8 bg-gradient-to-t from-background via-background to-transparent pt-8 pb-4"
           style={{ width: `${width}px`, margin: "0 auto", maxWidth: "calc(100vw - 2rem)" }}
         >
-          <div className="mx-auto px-2" style={{ maxWidth: "680px" }}>
+          <div className="max-w-2xl mx-auto">
             <AskInput isFollowingUp sendMessage={handleSend} />
           </div>
         </div>
