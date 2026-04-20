@@ -128,10 +128,10 @@ html {
 
 .chat-center {
   grid-area: center;
-  padding: 0 2rem;
+  padding: 0 2.5rem;
   min-width: 0;
-  /* Answer column stays readable */
-  max-width: 720px;
+  /* Readable answer column — wider than before */
+  max-width: 760px;
 }
 
 .chat-sidebar {
@@ -155,6 +155,7 @@ html {
   }
   .chat-center {
     max-width: 100%;
+    padding: 0 1.5rem;
   }
 }
 
@@ -250,6 +251,57 @@ html {
   margin-left: 2px;
   vertical-align: text-bottom;
   animation: cursor-blink 0.75s ease-in-out infinite;
+}
+
+/* ─── Research Answer Layout ─────────────────────────────────────────── */
+.research-answer {
+  /* Container for the full research-style answer */
+}
+
+/* ─── Key Takeaways Box ──────────────────────────────────────────────── */
+.key-takeaways-box {
+  background: hsl(var(--tint) / 0.05);
+  border: 1px solid hsl(var(--tint) / 0.15);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.key-takeaways-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* ─── Collapsible Research Sections ─────────────────────────────────── */
+.research-section {
+  border: 1px solid hsl(var(--border) / 0.5);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin: 0.75rem 0;
+}
+
+.research-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: hsl(var(--muted) / 0.3);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  color: hsl(var(--foreground));
+}
+
+.research-section-header:hover {
+  background: hsl(var(--muted) / 0.5);
+}
+
+.research-section-body {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid hsl(var(--border) / 0.4);
 }
 
 /* ─── Sources Sidebar ──────────────────────────────────────────────── */

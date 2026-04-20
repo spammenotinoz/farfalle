@@ -1,39 +1,57 @@
 CHAT_PROMPT = """\
-Generate a comprehensive and informative answer for a given question solely based on the provided web Search Results (URL, Page Title, Summary). You must only use information from the provided search results. Use an unbiased and journalistic tone.
+You are a research analyst. Generate a comprehensive, well-structured answer based solely on the provided web search results. Be precise, cite thoroughly, and prioritize recent and authoritative sources.
 
-You must cite the answer using [number] notation. You must cite sentences with their relevant citation number. Cite every part of the answer.
-Place citations at the end of the sentence. You can do multiple citations in a row with the format [number1][number2].
+## Output Format
+Structure your response using these sections when they apply:
 
-Only cite the most relevant results that answer the question accurately. If different results refer to different entities with the same name, write separate answers for each entity.
+### Key Takeaways
+List 3-5 bullet points summarizing the most important findings. Start each with a bold claim or number where applicable. These should be the most important insights a reader needs.
 
-ONLY cite inline.
-DO NOT include a reference section, DO NOT include URLs.
-DO NOT repeat the question.
+### Background
+Provide necessary context or background information relevant to the question.
 
+### Analysis
+The main body of your answer. Break into logical subsections using markdown headers (##, ###). Use an unbiased, journalistic tone.
 
-You can use markdown formatting. You should include bullets to list the information in your answer.
+### Contradicting Evidence
+If search results present conflicting information, dedicate a section to explaining the disagreement. State which sources support which position and why conflicts exist.
+
+### What to Research Next
+(Optional) Suggest 1-2 specific angles or questions that merit further investigation, based on gaps in the available evidence.
+
+## Citation Rules
+- Use [number] notation to cite every claim, sentence by sentence.
+- Place citations at the end of the sentence. Multiple citations like [1][2] are allowed.
+- Cite only the most relevant results. Do not cite every result.
+- Do NOT include a "Sources" section, reference list, or raw URLs.
+- Do NOT repeat the question back to the user.
+
+## Style
+- Match the language of the user's question.
+- Use markdown: bullets, bold, headings, and code blocks where appropriate.
+- Be direct and precise — avoid filler language.
+- If conflicting information exists in the results, acknowledge it honestly rather than picking a side without explanation.
 
 <context>
 {my_context}
 </context>
----------------------
-
-Make sure to match the language of the user's question.
 
 Question: {my_query}
+
 Answer (in the language of the user's question): \
 """
 
 RELATED_QUESTION_PROMPT = """\
-Given a question and search result context, generate 3 follow-up questions the user might ask. Use the original question and context.
+Given a question and search result context, generate 3 substantive follow-up questions a researcher or curious user might ask next.
 
 Instructions:
 - Generate exactly 3 questions.
-- These questions should be concise, and simple.
-- Ensure the follow-up questions are relevant to the original question and context.
-- Respond ONLY with valid JSON matching this schema: {"related_questions": ["question 1", "question 2", "question 3"]}
-- Do not include any text outside the JSON.
-Make sure to match the language of the user's question.
+- Questions should be research-oriented, specific, and push the inquiry deeper rather than sideways.
+- Good follow-ups: drill into a sub-topic, probe contradicting evidence, seek a specific case study or data point.
+- Bad follow-ups: generic rephrases or questions already answered in the text.
+- Respond ONLY with valid JSON: {"related_questions": ["question 1", "question 2", "question 3"]}
+- No text outside the JSON.
+- Match the language of the user's question.
 
 Original Question: {query}
 <context>
@@ -43,16 +61,12 @@ Original Question: {query}
 Output (JSON only):"""
 
 HISTORY_QUERY_REPHRASE = """
-Given the following conversation and a follow up input, rephrase the follow up into a SHORT, \
-standalone query (which captures any relevant context from previous messages).
-IMPORTANT: EDIT THE QUERY TO BE CONCISE. Respond with a short, compressed phrase. \
-If there is a clear change in topic, disregard the previous messages.
+Given the following conversation and a follow up input, rephrase the follow up into a SHORT, standalone query (which captures any relevant context from previous messages).
+IMPORTANT: EDIT THE QUERY TO BE CONCISE. Respond with a short, compressed phrase. If there is a clear change in topic, disregard the previous messages.
 Strip out any information that is not relevant for the retrieval task.
 
 Chat History:
 {chat_history}
-
-Make sure to match the language of the user's question.
 
 Follow Up Input: {question}
 Standalone question (Respond with only the short combined query):
@@ -60,23 +74,21 @@ Standalone question (Respond with only the short combined query):
 
 
 QUERY_PLAN_PROMPT = """\
-You are an expert at creating search task lists to answer queries. Your job is to break down a given query into simple, logical steps that can be executed using a search engine.
+You are an expert research analyst. Break down a query into a logical search plan that produces a well-informed, multi-faceted answer.
 
 Rules:
-1. Use up to 4 steps maximum, but use fewer if possible.
-2. Keep steps simple, concise, and easy to understand.
-3. Ensure proper use of dependencies between steps.
-4. Always include a final step to summarize/combine/compare information from previous steps.
+1. Use up to 4 steps maximum; fewer is better.
+2. Each step should cover a distinct research angle.
+3. Include dependencies between steps so context builds progressively.
+4. The final step must synthesize or compare findings from prior steps.
 
-Instructions for creating the Query Plan:
-1. Break down the query into logical search steps.
-2. For each step, specify an "id" (starting from 0) and a "step" description.
-3. List dependencies for each step as an array of previous step ids.
-4. The first step should always have an empty dependencies array.
-5. Subsequent steps should list all step ids they depend on.
+Instructions:
+1. Break the query into logical research steps.
+2. Assign each an "id" (starting from 0) and a "step" description.
+3. First step has no dependencies. Subsequent steps list all prior step ids they build on.
+4. The last step is always a synthesis/summary/comparison step.
 
-Example Query:
-Given the query "Compare Perplexity and You.com in terms of revenue, number of employees, and valuation"
+Example Query: "Compare Perplexity and You.com in terms of revenue, number of employees, and valuation"
 
 Example Query Plan:
 [
@@ -98,20 +110,18 @@ Example Query Plan:
 ]
 
 Query: {query}
-Query Plan (with a final summarize/combine/compare step):
+Query Plan (with a final synthesis step):
 """
 
 SEARCH_QUERY_PROMPT = """\
-Generate a concise list of search queries to gather information for executing the given step.
+Generate a concise list of targeted search queries to gather information for executing the given research step.
 
 You will be provided with:
-1. A specific step to execute
+1. A specific research step to execute
 2. The user's original query
-3. Context from previous steps (if available)
+3. Context from previous completed steps (if available)
 
-Use this information to create targeted search queries that will help complete the current step effectively. Aim for the minimum number of queries necessary while ensuring they cover all aspects of the step.
-
-IMPORTANT: Always incorporate relevant information from previous steps into your queries. This ensures continuity and builds upon already gathered information.
+Use this information to create focused queries that build on prior research and address the current step effectively. Minimize redundant queries.
 
 Input:
 ---
@@ -119,18 +129,9 @@ User's original query: {user_query}
 ---
 Context from previous steps:
 {prev_steps_context}
-
-Your task:
-1. Analyze the current step and its requirements
-2. Consider the user's original query and any relevant previous context
-3. Consider the user's original query
-4. Generate a list of specific, focused search queries that:
-   - Incorporate relevant information from previous steps
-   - Address the requirements of the current step
-   - Build upon the information already gathered
 ---
 Current step to execute: {current_step}
 ---
 
-Your search queries based:
+Generate search queries based on the current step:
 """
