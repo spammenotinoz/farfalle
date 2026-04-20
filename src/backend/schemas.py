@@ -43,6 +43,7 @@ class SearchResult(BaseModel):
     title: str
     url: str
     content: str
+    image: str | None = None
 
     def __str__(self):
         return f"Title: {self.title}\nURL: {self.url}\n Summary: {self.content}"

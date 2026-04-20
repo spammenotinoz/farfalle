@@ -136,6 +136,7 @@ export type SearchResult = {
   title: string;
   url: string;
   content: string;
+  image?: string | null;
 };
 
 export type SearchResultStream = {

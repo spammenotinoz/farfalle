@@ -46,7 +46,8 @@ export function SourcesSidebar({ results }: SourcesSidebarProps) {
         </div>
       </div>
 
-      {results.map(({ title, url, content }, index) => {
+      {results.map((result, index) => {
+        const { title, url, content, image } = result;
         const domain = formatHostname(url);
         return (
           <motion.a
@@ -74,6 +75,17 @@ export function SourcesSidebar({ results }: SourcesSidebarProps) {
             {/* Snippet */}
             {content && (
               <p className="source-card-snippet mt-1.5">{content}</p>
+            )}
+
+            {/* Inline thumbnail from article — avoids unrelated image search */}
+            {result.image && (
+              <div className="mt-2 rounded-md overflow-hidden bg-muted">
+                <img
+                  src={result.image}
+                  alt={title}
+                  className="w-full h-20 object-cover"
+                />
+              </div>
             )}
 
             {/* Open link */}
