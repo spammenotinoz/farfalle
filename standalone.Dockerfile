@@ -43,11 +43,6 @@ WORKDIR /app
 # Copy package files
 COPY src/frontend/package.json src/frontend/pnpm-lock.yaml ./
 
-# Create .env for Next.js build (reads NEXT_PUBLIC_* vars at build time)
-RUN echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" >> .env && \
-    echo "NEXT_PUBLIC_LOCAL_MODE_ENABLED=${NEXT_PUBLIC_LOCAL_MODE_ENABLED}" >> .env && \
-    echo "NEXT_PUBLIC_PRO_MODE_ENABLED=${NEXT_PUBLIC_PRO_MODE_ENABLED}" >> .env
-
 # Install dependencies (including dev for build)
 RUN npm install -g pnpm && \
     pnpm install --force
@@ -87,11 +82,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install pnpm globally in runtime
 RUN npm install -g pnpm
-
-# Also write .env into the frontend dir so Next.js finds it at runtime
-RUN echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" > /workspace/src/frontend/.env && \
-    echo "NEXT_PUBLIC_LOCAL_MODE_ENABLED=${NEXT_PUBLIC_LOCAL_MODE_ENABLED}" >> /workspace/src/frontend/.env && \
-    echo "NEXT_PUBLIC_PRO_MODE_ENABLED=${NEXT_PUBLIC_PRO_MODE_ENABLED}" >> /workspace/src/frontend/.env
 
 # Copy Python virtualenv from builder
 COPY --from=builder /workspace/.venv /workspace/.venv
