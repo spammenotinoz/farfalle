@@ -24,7 +24,7 @@ export const createConfigSlice: StateCreator<
 > = (set) => ({
   model: ChatModel.FAST,
   localMode: false,
-  proMode: false,
+  proMode: true,
   setModel: (model: ChatModel) => set({ model }),
   toggleLocalMode: () =>
     set((state) => {

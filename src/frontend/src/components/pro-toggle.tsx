@@ -43,7 +43,7 @@ const ProToggle = () => {
                 proMode ? "text-tint" : "text-muted-foreground group-hover:text-foreground"
               )}
             >
-              Expert
+              {proMode ? "Expert" : "Standard"}
             </span>
           </div>
           <Switch
