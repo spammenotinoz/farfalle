@@ -45,7 +45,7 @@ COPY src/frontend/package.json src/frontend/pnpm-lock.yaml ./
 
 # Install dependencies (including dev for build)
 RUN npm install -g pnpm && \
-    pnpm install --frozen-lockfile
+    pnpm install --force
 
 # Copy source and build
 COPY src/frontend/ .
