@@ -85,17 +85,17 @@ export const AskInput = ({
     >
       <div
         className={cn(
-          "w-full flex flex-col bg-card/80 backdrop-blur-sm transition-all duration-200",
+          "w-full flex flex-col bg-card border transition-all duration-200",
           isFollowingUp
-            ? "rounded-full border-2 items-center"
-            : "rounded-2xl border-2",
-          !isRecording && "focus-within:border-tint/50 focus-within:shadow-lg",
+            ? "rounded-full border shadow-sm items-center"
+            : "rounded-2xl border shadow-sm",
+          !isRecording && "focus-within:ring-2 focus-within:ring-tint/30",
         )}
       >
         {/* Recording indicator */}
         {isRecording && (
-          <div className="flex items-center gap-3 px-4 py-2 border-b bg-destructive/5 rounded-t-2xl">
-            <div className="w-3 h-3 rounded-full bg-destructive animate-pulse" />
+          <div className="flex items-center gap-3 px-4 py-2 border-b rounded-t-2xl bg-destructive/5">
+            <div className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse flex-shrink-0" />
             <span className="text-sm font-medium text-destructive">
               {formatTime(recordingTime)}
             </span>
@@ -106,25 +106,26 @@ export const AskInput = ({
         <div
           className={cn(
             "flex items-end gap-2",
-            isFollowingUp ? "p-1.5 px-2" : "p-2",
+            isFollowingUp ? "p-1.5 px-2" : "p-2.5",
           )}
         >
           {/* Voice button */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center flex-shrink-0">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant={isRecording ? "destructive" : "ghost"}
+                    variant="ghost"
                     size="icon"
                     className={cn(
-                      "rounded-full hover:bg-muted transition-colors",
-                      isFollowingUp ? "h-8 w-8" : "",
+                      "rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors",
+                      isRecording && "text-destructive hover:text-destructive",
+                      isFollowingUp ? "h-8 w-8" : "h-9 w-9",
                     )}
                     onClick={handleVoiceToggle}
                   >
-                    <Mic size={isFollowingUp ? 18 : 20} />
+                    <Mic size={isFollowingUp ? 17 : 19} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -137,13 +138,17 @@ export const AskInput = ({
           {/* Textarea */}
           <TextareaAutosize
             className={cn(
-              "w-full bg-transparent resize-none focus:outline-none",
+              "w-full bg-transparent resize-none focus:outline-none text-foreground placeholder:text-muted-foreground",
               isFollowingUp
                 ? "text-sm py-1.5 max-h-28"
-                : "text-md py-2 max-h-40",
+                : "text-base py-2 max-h-48",
             )}
             placeholder={
-              isRecording ? "Listening..." : isFollowingUp ? "Ask a follow-up..." : "Ask anything..."
+              isRecording
+                ? "Listening..."
+                : isFollowingUp
+                  ? "Ask a follow-up..."
+                  : "Search anything..."
             }
             onChange={(e) => setInput(e.target.value)}
             value={input}
@@ -165,13 +170,13 @@ export const AskInput = ({
                     variant="default"
                     size="icon"
                     className={cn(
-                      "rounded-full bg-tint hover:bg-tint/80 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed",
-                      isFollowingUp ? "h-8 w-8" : "",
+                      "rounded-full bg-foreground text-background hover:bg-foreground/80 transition-all duration-200",
+                      isFollowingUp ? "h-8 w-8" : "h-9 w-9",
                     )}
                     disabled={input.trim().length < 3 || isStreaming}
                     onClick={handleSend}
                   >
-                    <ArrowUp size={isFollowingUp ? 18 : 20} />
+                    <ArrowUp size={isFollowingUp ? 16 : 18} strokeWidth={2.5} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Send</TooltipContent>
@@ -180,19 +185,10 @@ export const AskInput = ({
           </div>
         </div>
 
-        {/* Bottom bar: model selector + shortcuts (full mode only) */}
+        {/* Bottom bar: model selector (homepage only) */}
         {!isFollowingUp && (
-          <div className="flex items-center justify-between px-3 py-2 border-t bg-muted/20 rounded-b-2xl">
+          <div className="flex items-center justify-between px-3 pb-2.5 pt-0">
             <ModelSelection />
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {input.length > 0 && (
-                <span className="hidden sm:inline">{input.length} chars</span>
-              )}
-              <span className="hidden sm:inline">
-                <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↵</kbd>{" "}
-                to send
-              </span>
-            </div>
           </div>
         )}
       </div>

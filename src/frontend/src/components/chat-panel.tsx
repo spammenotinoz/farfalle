@@ -111,31 +111,29 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
 
   if (messages.length === 0 && !threadId) {
     return (
-      <div className="w-full flex flex-col justify-center items-center min-h-[calc(100vh-8rem)]">
-        <div className="flex flex-col items-center justify-center mb-10 space-y-3">
-          <h1 className="text-4xl md:text-5xl font-bold text-center bg-gradient-to-r from-tint to-tint/60 bg-clip-text text-transparent">
-            Ask anything
-          </h1>
-          <p className="text-muted-foreground text-center max-w-md">
-            Search the web, get answers, and chat with an AI that knows the world.
-          </p>
-        </div>
-        <div className="w-full max-w-lg">
-          <AskInput sendMessage={handleSend} />
-          <div className="mt-6">
-            <StarterQuestionsList handleSend={handleSend} />
+      <div className="w-full flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4">
+        {/* Hero search */}
+        <div className="w-full max-w-2xl mb-10">
+          <div className="text-center mb-8">
+            <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-foreground mb-3">
+              Ask anything
+            </h1>
+            <p className="text-base text-muted-foreground">
+              Deep research on anything — powered by live web search
+            </p>
           </div>
+          <AskInput sendMessage={handleSend} />
         </div>
-        <div className="mt-8 flex items-center gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <kbd className="px-2 py-1 bg-muted rounded-md font-mono">Ctrl</kbd>
-            <kbd className="px-2 py-1 bg-muted rounded-md font-mono">Enter</kbd>
-            to search
-          </span>
-          <span className="flex items-center gap-1">
-            <kbd className="px-2 py-1 bg-muted rounded-md font-mono">?</kbd>
-            for shortcuts
-          </span>
+
+        {/* Topic cards */}
+        <div className="w-full max-w-2xl">
+          <StarterQuestionsList handleSend={handleSend} />
+        </div>
+
+        {/* Keyboard hint */}
+        <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
+          <kbd className="px-2 py-1 bg-muted rounded-md font-mono text-[11px]">↵</kbd>
+          <span>to search</span>
         </div>
       </div>
     );

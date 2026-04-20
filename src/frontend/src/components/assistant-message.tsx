@@ -14,13 +14,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, BarChart2 } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 // ─── Inline Sources (mobile fallback) ──────────────────────────────────
 const InlineSources = ({ sources }: { sources: ChatMessage["sources"] }) => {
   if (!sources?.length) return null;
   return (
-    <details className="group border rounded-xl overflow-hidden mt-6">
+    <details className="group border rounded-xl overflow-hidden mt-5">
       <summary className="flex items-center gap-2 px-4 py-3 cursor-pointer select-none text-sm text-muted-foreground hover:text-foreground transition-colors">
         <BookOpen size={14} className="text-tint flex-shrink-0" />
         <span className="font-medium">Sources</span>
@@ -39,13 +39,13 @@ const InlineSources = ({ sources }: { sources: ChatMessage["sources"] }) => {
 // ─── Error Message ───────────────────────────────────────────────────────
 export function ErrorMessage({ content }: { content: string }) {
   return (
-    <Alert className="bg-red-500/5 border-red-500/15 p-5">
-      <AlertDescription className="text-base text-foreground">
+    <Alert className="bg-destructive/5 border-destructive/15 p-5 rounded-xl">
+      <AlertDescription className="text-sm text-foreground leading-relaxed">
         {content.split(" ").map((word, index) => {
           const urlPattern = /(https?:\/\/[^\s]+)/g;
           if (urlPattern.test(word)) {
             return (
-              <a key={index} href={word} target="_blank" rel="noopener noreferrer" className="underline">
+              <a key={index} href={word} target="_blank" rel="noopener noreferrer" className="underline text-tint">
                 {word}
               </a>
             );
@@ -57,7 +57,7 @@ export function ErrorMessage({ content }: { content: string }) {
   );
 }
 
-// ─── Content Actions (copy/share/export) ────────────────────────────────
+// ─── Content Actions ────────────────────────────────────────────────────
 const ContentActions = ({ content }: { content: string }) => {
   const [copied, setCopied] = useState(false);
 
@@ -79,25 +79,25 @@ const ContentActions = ({ content }: { content: string }) => {
     const blob = new Blob([content], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = "search-result.md"; a.click();
+    a.href = url; a.download = "research-report.md"; a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground flex-shrink-0">
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground flex-shrink-0 rounded-lg">
           <MoreHorizontal size={16} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={handleCopy} className="gap-2">
-          <Copy size={14} />{copied ? "Copied!" : "Copy"}
+        <DropdownMenuItem onClick={handleCopy} className="gap-2 text-sm">
+          <Copy size={14} />{copied ? "Copied!" : "Copy answer"}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleShare} className="gap-2">
+        <DropdownMenuItem onClick={handleShare} className="gap-2 text-sm">
           <Share2 size={14} />Share
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleExport} className="gap-2">
+        <DropdownMenuItem onClick={handleExport} className="gap-2 text-sm">
           <Download size={14} />Export as Markdown
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -109,9 +109,9 @@ const ContentActions = ({ content }: { content: string }) => {
 const AnswerMetaBar = ({ sources }: { sources: ChatMessage["sources"] }) => {
   if (!sources?.length) return null;
   return (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
-      <span className="flex items-center gap-1">
-        <BarChart2 size={11} />
+    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+      <span className="flex items-center gap-1.5">
+        <BookOpen size={12} className="text-tint" />
         <span>{sources.length} sources</span>
       </span>
     </div>
@@ -140,23 +140,24 @@ export const AssistantMessageContent = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className="research-answer"
     >
-      {/* Answer Meta — sources count */}
-      <AnswerMetaBar sources={sources} />
+      {/* Answer card */}
+      <div className="answer-card mb-4">
+        {/* Meta bar */}
+        <AnswerMetaBar sources={sources} />
 
-      {/* Answer body with actions */}
-      <div className="mb-4">
+        {/* Answer content */}
         {content ? (
           <div className="flex items-start gap-2">
             <div className="flex-1 min-w-0">
               <MessageComponent message={message} isStreaming={isStreaming} />
             </div>
             {!isStreaming && (
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 pt-0.5">
                 <ContentActions content={content} />
               </div>
             )}
@@ -168,21 +169,21 @@ export const AssistantMessageContent = ({
 
       {/* Images */}
       {hasImages && (
-        <div className="mt-4">
+        <div className="mt-3">
           <ImageSection images={images} />
         </div>
       )}
 
-      {/* Inline sources — mobile only (sidebar handles desktop) */}
+      {/* Inline sources — mobile only */}
       {hasSources && (
-        <div className="md:hidden mt-4">
+        <div className="md:hidden">
           <InlineSources sources={sources} />
         </div>
       )}
 
       {/* Related questions */}
       {hasRelated && (
-        <div className="mt-6">
+        <div className="mt-4">
           <RelatedQuestions questions={related_queries} onSelect={onRelatedQuestionSelect} />
         </div>
       )}
