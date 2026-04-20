@@ -12,10 +12,15 @@ export default function ChatPage() {
 
   return (
     <div className="h-screen">
-      <div className="flex grow h-full mx-auto max-w-screen-md px-4 md:px-8">
-        <Suspense>
-          <ChatPanel threadId={threadId} />
-        </Suspense>
+      <div className="chat-layout">
+        <div className="chat-center">
+          <Suspense>
+            <ChatPanel threadId={threadId} />
+          </Suspense>
+        </div>
+        <div className="chat-sidebar" id="sources-sidebar-search">
+          {/* Sources sidebar — populated by ChatPanel via portal */}
+        </div>
       </div>
     </div>
   );

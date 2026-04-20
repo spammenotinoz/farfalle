@@ -1,13 +1,10 @@
-import { cn } from "@/lib/utils";
 import {
   CameraIcon,
   ListPlusIcon,
-  SparkleIcon,
   StarIcon,
   TextSearchIcon,
   BotIcon,
 } from "lucide-react";
-
 import { motion } from "framer-motion";
 
 export const Section = ({
@@ -37,24 +34,22 @@ export const Section = ({
       initial={animate ? { opacity: 0, y: 20 } : undefined}
       animate={animate ? { opacity: 1, y: 0 } : undefined}
       transition={animate ? { duration: 0.4 } : undefined}
-      className={cn(
-        "flex flex-col mb-8",
-      )}
+      className={cn("flex flex-col mb-6")}
     >
-      <div className="flex items-center space-x-2 mb-4">
+      <div className="flex items-center space-x-2 mb-3">
         {streaming ? (
           <motion.div
             animate={{ rotate: [0, 360] }}
             transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
           >
-            <IconComponent size={20} className="text-tint" />
+            <IconComponent size={18} className="text-tint" />
           </motion.div>
         ) : (
-          <IconComponent size={20} className="text-tint/80" />
+          <IconComponent size={18} className="text-tint/80" />
         )}
-        <div className="text-base font-medium text-foreground/90">{title}</div>
+        <div className="text-sm font-medium text-foreground/80">{title}</div>
       </div>
-      <div className="pl-7">{children}</div>
+      <div className="pl-6">{children}</div>
     </motion.div>
   );
 };

@@ -1,10 +1,9 @@
 import { MessageComponent, MessageComponentSkeleton } from "./message";
 import RelatedQuestions from "./related-questions";
-import { SearchResultsSkeleton, SearchResults } from "./search-results";
-import { Section } from "./section";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ImageSection, ImageSectionSkeleton } from "./image-section";
+import { SearchResults } from "./search-results";
+import { AlertCircle, BookOpen } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ImageSection } from "./image-section";
 import { ChatMessage } from "../../generated";
 import { Copy, Share2, Download, MoreHorizontal } from "lucide-react";
 import { Button } from "./ui/button";
@@ -13,10 +12,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { motion } from "framer-motion";
+} from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 
 export function ErrorMessage({ content }: { content: string }) {
   return (
@@ -81,7 +78,7 @@ const ContentActions = ({ content }: { content: string }) => {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
         >
           <MoreHorizontal size={16} />
         </Button>
@@ -101,6 +98,41 @@ const ContentActions = ({ content }: { content: string }) => {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+};
+
+// ─── Inline Sources (for mobile / fallback) ───────────────────────────────
+const InlineSources = ({ sources }: { sources: ChatMessage["sources"] }) => {
+  if (!sources?.length) return null;
+
+  return (
+    <details className="group mt-4 border rounded-xl overflow-hidden">
+      <summary className="flex items-center gap-2 px-4 py-3 cursor-pointer select-none text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <BookOpen size={14} className="text-tint flex-shrink-0" />
+        <span className="font-medium">Sources</span>
+        <span className="text-xs text-muted-foreground font-mono ml-1">
+          ({sources.length})
+        </span>
+        <svg
+          className="ml-auto transition-transform group-open:rotate-180"
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
+          fill="none"
+        >
+          <path
+            d="M2 4L6 8L10 4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </summary>
+      <div className="border-t px-4 py-3">
+        <SearchResults results={sources} />
+      </div>
+    </details>
   );
 };
 
@@ -130,45 +162,45 @@ export const AssistantMessageContent = ({
   const hasRelated = related_queries && related_queries.length > 0;
 
   return (
-    <div className="flex flex-col group">
-      <div className="relative">
-        <Section
-          title="Answer"
-          animate={isStreaming}
-          streaming={isStreaming}
-        >
-          {content ? (
-            <div className="relative">
-              <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <ContentActions content={content} />
-              </div>
+    <div className="animate-message-in">
+      {/* Answer */}
+      <div className="mb-2">
+        {content ? (
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0">
               <MessageComponent message={message} isStreaming={isStreaming} />
             </div>
-          ) : (
-            <MessageComponentSkeleton />
-          )}
-        </Section>
+            <div className="flex-shrink-0">
+              <ContentActions content={content} />
+            </div>
+          </div>
+        ) : (
+          <MessageComponentSkeleton />
+        )}
       </div>
 
+      {/* Images (mobile-friendly inline) */}
       {hasImages && (
-        <Section title="Images" animate={isStreaming}>
+        <div className="mt-4">
           <ImageSection images={images} />
-        </Section>
+        </div>
       )}
 
+      {/* Inline sources — only shown on small screens where sidebar isn't available */}
       {hasSources && (
-        <Section title="Sources" animate={isStreaming}>
-          <SearchResults results={sources} />
-        </Section>
+        <div className="md:hidden mt-4">
+          <InlineSources sources={sources} />
+        </div>
       )}
 
+      {/* Related questions */}
       {hasRelated && (
-        <Section title="Related" animate={isStreaming}>
+        <div className="mt-6">
           <RelatedQuestions
             questions={related_queries}
             onSelect={onRelatedQuestionSelect}
           />
-        </Section>
+        </div>
       )}
     </div>
   );

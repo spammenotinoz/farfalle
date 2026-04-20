@@ -4,28 +4,10 @@ import Link from "next/link";
 import { ModeToggle } from "./mode-toggle";
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
-import { PlusIcon, Search } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { useChatStore } from "@/stores";
 import { useRouter } from "next/navigation";
-
-const NewChatButton = () => {
-  const router = useRouter();
-  const { clearMessages } = useChatStore();
-  return (
-    <Button
-      variant="secondary"
-      size="sm"
-      className="gap-2"
-      onClick={() => {
-        clearMessages();
-        router.push("/");
-      }}
-    >
-      <PlusIcon className="w-4 h-4" />
-      <span className="hidden sm:inline">New</span>
-    </Button>
-  );
-};
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const router = useRouter();
@@ -34,28 +16,39 @@ export function Navbar() {
   const onHomePage = messages.length === 0;
 
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 py-2 bg-background/80 backdrop-blur-md border-b">
-        <div className="mx-auto max-w-screen-md flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
-              <img
-                src={theme === "light" ? "/logo-black.png" : "/logo-white.png"}
-                alt="Logo"
-                className="w-10 h-10 rounded-lg"
-              />
-              <span className="text-xl font-semibold hidden sm:block">
-                Ultimate Search
-              </span>
-            </Link>
-          </div>
+    <header className="fixed top-0 left-0 right-0 z-50 px-4 py-2.5 bg-background/80 backdrop-blur-md border-b">
+      <div className="mx-auto flex items-center justify-between gap-4">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
+          <img
+            src={theme === "light" ? "/logo-black.png" : "/logo-white.png"}
+            alt="Logo"
+            className="w-9 h-9 rounded-lg"
+          />
+          <span className="text-lg font-semibold hidden sm:block tracking-tight">
+            Ultimate Search
+          </span>
+        </Link>
 
-          <div className="flex items-center gap-2">
-            <ModeToggle />
-            {!onHomePage && <NewChatButton />}
-          </div>
+        {/* Right controls */}
+        <div className="flex items-center gap-2">
+          <ModeToggle />
+          {!onHomePage && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-sm"
+              onClick={() => {
+                useChatStore.getState().clearMessages();
+                router.push("/");
+              }}
+            >
+              <PlusIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">New</span>
+            </Button>
+          )}
         </div>
-      </header>
-    </>
+      </div>
+    </header>
   );
 }

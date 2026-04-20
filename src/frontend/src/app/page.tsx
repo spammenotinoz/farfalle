@@ -7,10 +7,15 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-16">
-        <div className="flex grow mx-auto max-w-screen-md px-4 md:px-8">
-          <Suspense>
-            <ChatPanel />
-          </Suspense>
+        <div className="chat-layout">
+          <div className="chat-center">
+            <Suspense>
+              <ChatPanel />
+            </Suspense>
+          </div>
+          <div className="chat-sidebar" id="sources-sidebar">
+            {/* Sources sidebar — populated by ChatPanel via portal */}
+          </div>
         </div>
       </main>
     </div>

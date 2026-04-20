@@ -3,144 +3,109 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "./ui/skeleton";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import { SearchResult } from "../../generated";
-import { ExternalLink, ArrowRight } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export const SearchResultsSkeleton = () => {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-      {[...Array(4)].map((_, index) => (
-        <div key={`skeleton-${index}`} className="p-3">
-          <Skeleton className="rounded-lg h-24 bg-card" />
-        </div>
-      ))}
-    </div>
-  );
-};
+export const SearchResultsSkeleton = () => (
+  <div className="grid grid-cols-2 gap-2">
+    {[...Array(4)].map((_, i) => (
+      <Skeleton key={i} className="rounded-xl h-24 bg-card" />
+    ))}
+  </div>
+);
 
-export const Logo = ({ url, size = 16 }: { url: string; size?: number }) => {
-  return (
-    <div className="rounded-md overflow-hidden relative bg-muted p-1">
-      <img
-        className="block relative"
-        src={`https://www.google.com/s2/favicons?sz=${size}&domain=${url}`}
-        alt="favicon"
-        width={size}
-        height={size}
-      />
-    </div>
-  );
-};
+export const Logo = ({ url, size = 16 }: { url: string; size?: number }) => (
+  <div className="rounded overflow-hidden bg-muted p-0.5 flex-shrink-0">
+    <img
+      className="block"
+      src={`https://www.google.com/s2/favicons?sz=${size}&domain=${url}`}
+      alt="favicon"
+      width={size}
+      height={size}
+    />
+  </div>
+);
+
+function formatHostname(url: string) {
+  try {
+    return new URL(url).hostname.replace("www.", "");
+  } catch {
+    return url;
+  }
+}
 
 export function SearchResults({ results }: { results: SearchResult[] }) {
   const [showAll, setShowAll] = useState(false);
-
-  const displayedResults = showAll ? results : results.slice(0, 4);
-  const additionalCount = results.length > 4 ? results.length - 4 : 0;
-
-  const formatHostname = (url: string) => {
-    try {
-      const hostname = new URL(url).hostname;
-      return hostname.replace("www.", "");
-    } catch {
-      return url;
-    }
-  };
+  const display = showAll ? results : results.slice(0, 4);
+  const extra = results.length - 4;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground">
+        <span className="text-xs text-muted-foreground font-mono">
           {results.length} sources
-        </h3>
-        {additionalCount > 0 && !showAll && (
+        </span>
+        {extra > 0 && !showAll && (
           <button
+            className="text-xs text-tint hover:underline"
             onClick={() => setShowAll(true)}
-            className="text-xs text-tint hover:underline flex items-center gap-1"
           >
-            View all
-            <ArrowRight size={12} />
+            View all →
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <AnimatePresence>
-          {displayedResults.map(({ title, url, content }, index) => {
-            const formattedUrl = formatHostname(url);
-
-            return (
-              <motion.div
-                key={`source-${index}`}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <a href={url} target="_blank" rel="noopener noreferrer">
-                      <Card className="h-full rounded-xl border-border/50 hover:border-tint/50 hover:shadow-md transition-all duration-200 cursor-pointer group overflow-hidden">
-                        <CardContent className="p-3 flex flex-col h-full">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <Logo url={url} size={20} />
-                            <ExternalLink
-                              size={12}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground"
-                            />
-                          </div>
-
-                          <p className="text-xs font-medium line-clamp-2 text-foreground/80 group-hover:text-tint transition-colors">
-                            {title}
-                          </p>
-
-                          <div className="mt-auto pt-2 flex items-center gap-1">
-                            <span className="text-[10px] text-muted-foreground truncate">
-                              {formattedUrl}
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </a>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-80 p-0" side="top">
-                    <div className="flex flex-col">
-                      <div className="p-3 border-b bg-muted/30">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Logo url={url} size={24} />
-                          <span className="text-xs text-muted-foreground truncate">
-                            {formattedUrl}
-                          </span>
-                        </div>
-                        <h4 className="font-medium text-sm">{title}</h4>
-                      </div>
-                      <div className="p-3">
-                        <p className="text-xs text-muted-foreground line-clamp-4">
-                          {content}
-                        </p>
-                      </div>
+          {display.map(({ title, url, content }, i) => (
+            <motion.a
+              key={`src-${i}`}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ delay: i * 0.05 }}
+            >
+              <Card className="h-full rounded-xl border-border/50 hover:border-tint/40 hover:shadow-sm transition-all duration-200 overflow-hidden">
+                <CardContent className="p-3 flex flex-col gap-2">
+                  <div className="flex items-start gap-2">
+                    <Logo url={url} size={16} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium line-clamp-2 leading-tight">
+                        {title}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {formatHostname(url)}
+                      </p>
                     </div>
-                  </HoverCardContent>
-                </HoverCard>
-              </motion.div>
-            );
-          })}
+                    <ExternalLink
+                      size={10}
+                      className="flex-shrink-0 text-muted-foreground"
+                    />
+                  </div>
+                  {content && (
+                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">
+                      {content}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.a>
+          ))}
         </AnimatePresence>
       </div>
 
-      {showAll && additionalCount > 0 && (
+      {showAll && extra > 0 && (
         <button
+          className="w-full text-center text-xs text-muted-foreground hover:text-foreground py-2"
           onClick={() => setShowAll(false)}
-          className="w-full text-center text-xs text-muted-foreground hover:text-tint transition-colors py-2"
         >
-          Show fewer sources
+          Show fewer
         </button>
       )}
     </div>

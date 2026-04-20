@@ -1,5 +1,5 @@
 import { AssistantMessageContent } from "./assistant-message";
-import { Separator } from "./ui/separator";
+import { Separator } from "@/components/ui/separator";
 import { UserMessageContent } from "./user-message";
 import { memo } from "react";
 import {
@@ -27,7 +27,7 @@ const MessagesList = ({
 
   return (
     <div className="flex flex-col pb-28">
-      <AnimatePresence>
+      <AnimatePresence mode="popLayout">
         {messages.map((message, index) =>
           message.role === MessageRole.USER ? (
             <motion.div
@@ -35,7 +35,8 @@ const MessagesList = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="animate-message-in"
             >
               <UserMessageContent message={message} />
             </motion.div>
@@ -45,32 +46,34 @@ const MessagesList = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-6"
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-5"
             >
               {message.agent_response && (
-                <ProSearchRender streamingProResponse={message.agent_response} />
+                <ProSearchRender
+                  streamingProResponse={message.agent_response}
+                />
               )}
               <AssistantMessageContent
                 message={message}
                 onRelatedQuestionSelect={onRelatedQuestionSelect}
               />
               {index !== messages.length - 1 && (
-                <Separator className="my-8 opacity-50" />
+                <Separator className="my-8 opacity-40" />
               )}
             </motion.div>
           ),
         )}
       </AnimatePresence>
 
-      {isStreamingProSearch && (
+      {isStreamingProSearch && streamingProResponse && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
+          exit={{ opacity: 0, y: -8 }}
         >
           <ProSearchRender
-            streamingProResponse={streamingProResponse ?? null}
+            streamingProResponse={streamingProResponse}
             isStreamingProSearch={isStreamingProSearch}
           />
         </motion.div>
@@ -78,10 +81,10 @@ const MessagesList = ({
 
       {streamingMessage && isStreamingMessage && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="space-y-6"
+          exit={{ opacity: 0, y: -16 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
           <AssistantMessageContent
             message={streamingMessage}

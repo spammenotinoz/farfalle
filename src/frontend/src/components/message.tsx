@@ -1,222 +1,176 @@
-import React, { FC, memo, useEffect, useState, useMemo } from "react";
+import React, { FC, memo, useMemo } from "react";
 import { MemoizedReactMarkdown } from "./markdown";
-import rehypeRaw from "rehype-raw";
-
-import _ from "lodash";
+import { SearchResult } from "../../generated";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "./ui/skeleton";
-import { ChatMessage, SearchResult } from "../../generated";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ExternalLink } from "lucide-react";
 
-function chunkString(str: string): string[] {
-  const words = str.split(" ");
-  const chunks = _.chunk(words, 2).map((chunk) => chunk.join(" ") + " ");
-  return chunks;
-}
-
-export interface MessageProps {
-  message: ChatMessage;
-  isStreaming?: boolean;
-}
-
-// Citation component that properly renders links
-const CitationLink = ({
-  number,
-  url,
-  title,
-}: {
+// ─── Citation Badge ──────────────────────────────────────────────────────
+interface CitationBadgeProps {
   number: number;
   url: string;
   title?: string;
-}) => {
-  if (!url) {
-    return (
-      <sup className="inline-flex items-center justify-center mx-0.5">
-        <span className="h-[1rem] min-w-[1rem] items-center justify-center rounded-full text-center px-1.5 text-xs font-mono bg-muted text-muted-foreground select-none">
-          {number}
-        </span>
-      </sup>
-    );
-  }
+}
 
-  return (
-    <sup className="inline-flex items-center justify-center mx-0.5">
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-        title={title || url}
-      >
-        <span className="h-[1rem] min-w-[1rem] items-center justify-center rounded-full text-center px-1.5 text-xs font-mono bg-muted text-muted-foreground hover:bg-muted/80">
-          {number}
-        </span>
-      </a>
-    </sup>
+const CitationBadge = memo(({ number, url, title }: CitationBadgeProps) => {
+  const badge = (
+    <span className="inline-flex h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded px-1 text-xs font-mono bg-tint/10 text-tint align-super mx-0.5">
+      {number}
+    </span>
   );
-};
 
-const Text = ({
-  children,
-  isStreaming,
-  containerElement = "p",
-}: {
-  children: React.ReactNode;
-  isStreaming: boolean;
-  containerElement: React.ElementType;
-}) => {
-  const renderText = (node: React.ReactNode): React.ReactNode => {
-    if (typeof node === "string") {
-      const chunks = isStreaming ? chunkString(node) : [node];
-      return chunks.flatMap((chunk, index) => {
-        return (
-          <span
-            key={`${index}-streaming`}
-            className={cn(
-              isStreaming ? "animate-in fade-in-25 duration-700" : "",
-            )}
-          >
-            {chunk}
-          </span>
-        );
-      });
-    } else if (React.isValidElement(node)) {
-      return React.cloneElement(
-        node,
-        node.props,
-        renderText(node.props.children),
-      );
-    } else if (Array.isArray(node)) {
-      return node.map((child, index) => (
-        <React.Fragment key={index}>{renderText(child)}</React.Fragment>
-      ));
-    }
-    return null;
-  };
+  if (!url) return badge;
 
-  const text = renderText(children);
-  return React.createElement(containerElement, {}, text);
-};
-
-const StreamingParagraph = memo(
-  ({ children }: React.HTMLProps<HTMLParagraphElement>) => {
-    return (
-      <Text isStreaming={true} containerElement="p">
-        {children}
-      </Text>
-    );
-  },
-);
-const Paragraph = memo(
-  ({ children }: React.HTMLProps<HTMLParagraphElement>) => {
-    return (
-      <Text isStreaming={false} containerElement="p">
-        {children}
-      </Text>
-    );
-  },
-);
-
-const ListItem = memo(({ children }: React.HTMLProps<HTMLLIElement>) => {
   return (
-    <Text isStreaming={false} containerElement="li">
-      {children}
-    </Text>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex align-super mx-0.5"
+          aria-label={title ?? url}
+        >
+          {badge}
+        </a>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs p-0 overflow-hidden z-50">
+        <div className="bg-card border rounded-lg overflow-hidden shadow-xl">
+          <div className="p-2.5 border-b bg-muted/40">
+            <div className="flex items-center gap-2 mb-1">
+              <img
+                className="w-4 h-4 rounded"
+                src={`https://www.google.com/s2/favicons?sz=16&domain=${url}`}
+                alt=""
+              />
+              <span className="text-[11px] text-muted-foreground truncate max-w-[180px]">
+                {(() => {
+                  try {
+                    return new URL(url).hostname.replace("www.", "");
+                  } catch {
+                    return url;
+                  }
+                })()}
+              </span>
+            </div>
+            <p className="text-xs font-medium leading-snug">{title ?? url}</p>
+          </div>
+          <div className="p-2 flex items-center justify-between">
+            <span className="text-[11px] text-tint">View source</span>
+            <ExternalLink size={10} className="text-tint" />
+          </div>
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 });
 
-const StreamingListItem = memo(
-  ({ children }: React.HTMLProps<HTMLLIElement>) => {
-    return (
-      <Text isStreaming={true} containerElement="li">
-        {children}
-      </Text>
-    );
-  },
-);
+CitationBadge.displayName = "CitationBadge";
 
-StreamingParagraph.displayName = "StreamingParagraph";
-Paragraph.displayName = "Paragraph";
-ListItem.displayName = "ListItem";
-StreamingListItem.displayName = "StreamingListItem";
+// ─── Parse [N] citations ──────────────────────────────────────────────────
+interface ParsedCitation {
+  type: "text" | "citation";
+  value: string;
+  number?: number;
+  url?: string;
+  title?: string;
+}
 
-// Process content to replace [1], [2], etc. with citation components
-const processContentWithCitations = (
+function parseContentWithCitations(
   content: string,
   sources: SearchResult[] | null | undefined,
-): React.ReactNode => {
+): ParsedCitation[] {
   const citationRegex = /\[(\d+)\]/g;
-  const elements: React.ReactNode[] = [];
+  const elements: ParsedCitation[] = [];
   let lastIndex = 0;
   let match;
 
   while ((match = citationRegex.exec(content)) !== null) {
-    // Add text before the citation
     const textBefore = content.slice(lastIndex, match.index);
     if (textBefore) {
-      elements.push(
-        <Text key={`text-${lastIndex}`} isStreaming={false} containerElement="span">
-          {textBefore}
-        </Text>,
-      );
+      elements.push({ type: "text", value: textBefore });
     }
 
-    // Parse citation number
     const number = parseInt(match[1], 10);
     const source = sources?.[number - 1];
-
-    elements.push(
-      <CitationLink
-        key={`citation-${number}-${lastIndex}`}
-        number={number}
-        url={source?.url ?? ""}
-        title={source?.title}
-      />,
-    );
+    elements.push({
+      type: "citation",
+      value: match[0],
+      number,
+      url: source?.url ?? "",
+      title: source?.title,
+    });
 
     lastIndex = citationRegex.lastIndex;
   }
 
-  // Add remaining text
-  const remainingText = content.slice(lastIndex);
-  if (remainingText) {
-    elements.push(
-      <Text key={`text-${lastIndex}`} isStreaming={false} containerElement="span">
-        {remainingText}
-      </Text>,
-    );
-  }
+  const remaining = content.slice(lastIndex);
+  if (remaining) elements.push({ type: "text", value: remaining });
 
   return elements;
-};
+}
 
-export const MessageComponent: FC<MessageProps> = ({
-  message,
-  isStreaming = false,
-}) => {
+// ─── Streaming Cursor ─────────────────────────────────────────────────────
+const StreamingCursor = memo(() => (
+  <span className="streaming-cursor" aria-hidden="true" />
+));
+StreamingCursor.displayName = "StreamingCursor";
+
+// ─── Main Message Component ──────────────────────────────────────────────
+export const MessageComponent: FC<{
+  message: { content: string; sources?: SearchResult[] | null };
+  isStreaming?: boolean;
+}> = ({ message, isStreaming = false }) => {
   const { content, sources } = message;
 
-  const processedContent = useMemo(
-    () => processContentWithCitations(content, sources),
+  // Split into text + citation tokens
+  const tokens = useMemo(
+    () => parseContentWithCitations(content, sources),
     [content, sources],
   );
 
+  // Markdown content with all [N] markers stripped
+  const markdownContent = content.replace(/\[(\d+)\]/g, "").trim();
+
+  // Inline citation badges only (exclude text tokens)
+  const citationBadges = tokens.filter((t) => t.type === "citation");
+
   return (
-    <div className="leading-relaxed break-words">
-      {processedContent}
+    <div className={cn("prose-answer", isStreaming && "relative")}>
+      <MemoizedReactMarkdown>{markdownContent}</MemoizedReactMarkdown>
+
+      {citationBadges.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1 mt-3 pt-3 border-t border-border/40">
+          {citationBadges.map((token) =>
+            token.type === "citation" ? (
+              <CitationBadge
+                key={`badge-${token.number}`}
+                number={token.number!}
+                url={token.url!}
+                title={token.title}
+              />
+            ) : null,
+          )}
+        </div>
+      )}
+
+      {isStreaming && <StreamingCursor />}
     </div>
   );
 };
 
-export const MessageComponentSkeleton = () => {
-  return (
-    <>
-      <Skeleton className="w-full py-4 bg-card">
-        <div className="flex flex-col gap-4">
-          <Skeleton className="mx-5 h-2 bg-primary/30" />
-          <Skeleton className="mx-5 h-2 bg-primary/30 mr-20" />
-          <Skeleton className="mx-5 h-2 bg-primary/30 mr-40" />
-        </div>
-      </Skeleton>
-    </>
-  );
-};
+export const MessageComponentSkeleton = () => (
+  <div className="flex flex-col gap-4 py-2">
+    <Skeleton className="h-2 w-full rounded" />
+    <Skeleton className="h-2 w-4/5 rounded" />
+    <Skeleton className="h-2 w-3/5 rounded" />
+    <Skeleton className="h-2 w-11/12 rounded" />
+    <Skeleton className="h-2 w-2/3 rounded" />
+  </div>
+);
