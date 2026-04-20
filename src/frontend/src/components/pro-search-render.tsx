@@ -1,6 +1,5 @@
-import { UserMessageContent } from "./user-message";
-import { Separator } from "@/components/ui/separator";
 import { memo, useEffect, useState } from "react";
+import { Separator } from "@/components/ui/separator";
 import {
   AgentSearchFullResponse,
   AgentSearchStepStatus,
