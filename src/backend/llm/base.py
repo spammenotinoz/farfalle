@@ -102,9 +102,7 @@ class OpenAILLM(BaseLLM):
         try:
             return response_model.model_validate_json(json_str)
         except Exception:
-            # Use model_construct to bypass validation for fallback
-            defaults = {n: f.default for n, f in response_model.model_fields.items() if f.default is not None}
-            return response_model.model_construct(**defaults)
+            return None
 
     async def close(self):
         await self.client.aclose()
