@@ -13,7 +13,7 @@ export function isLocalModel(model: ChatModel) {
 export function isCloudModel(model: ChatModel) {
   return [
     ChatModel.FAST,
-    ChatModel.POWERFUL,
+    ChatModel.THINKING,
     ChatModel.TECHNICAL,
   ].includes(model);
 }

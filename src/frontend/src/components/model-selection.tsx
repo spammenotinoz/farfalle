@@ -42,10 +42,10 @@ export const modelMap: Record<ChatModel, Model> = {
     icon: <Zap className="w-5 h-5" />,
     color: "text-cyan-500",
   },
-  [ChatModel.POWERFUL]: {
-    name: "Powerful",
+  [ChatModel.THINKING]: {
+    name: "Thinking",
     description: "",
-    value: ChatModel.POWERFUL,
+    value: ChatModel.THINKING,
     smallIcon: <Cpu className="w-4 h-4" />,
     icon: <Cpu className="w-5 h-5" />,
     color: "text-pink-500",

@@ -113,7 +113,7 @@ Defined in `src/backend/constants.py` as a `ChatModel` enum:
 
 Also reflected in auto-generated TypeScript types (`src/frontend/generated/types.gen.ts`, `schemas.gen.ts`) and the LLM default model in `src/backend/llm/base.py`.
 
-> **Note:** When updating model values in `constants.py`, remember to also update the corresponding enum in `src/frontend/generated/types.gen.ts` and the enum values in `src/frontend/generated/schemas.gen.ts`, plus the default model string in `src/backend/llm/base.py`. Then run `pnpm generate` to regenerate fully.
+> **Note:** When updating model values in `constants.py`, remember to also update the corresponding enum in `src/frontend/generated/types.gen.ts` and the enum values in `src/frontend/generated/schemas.gen.ts`, plus the default model string in `src/backend/llm/base.py`. Also update `ChatModel.POWERFUL` → `ChatModel.THINKING` references in `src/frontend/src/lib/utils.ts` and `src/frontend/src/components/model-selection.tsx` (both the key and the `name` display label). Then run `pnpm generate` to regenerate fully.
 
 ## API Endpoints
 
