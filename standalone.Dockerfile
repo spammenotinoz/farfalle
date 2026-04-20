@@ -68,7 +68,12 @@ WORKDIR /workspace
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
+
+# Install pnpm globally in runtime
+RUN npm install -g pnpm
 
 # Copy Python virtualenv from builder
 COPY --from=builder /workspace/.venv /workspace/.venv
