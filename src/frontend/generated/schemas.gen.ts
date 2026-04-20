@@ -284,9 +284,9 @@ export const $ChatMessage = {
 export const $ChatModel = {
   type: "string",
   enum: [
-    "gemini-2.5-flash-lite",
-    "gemini-3-flash",
-    "gemini-3-flash-technical",
+    "fast-latest",
+    "thinking-latest",
+    "technical-latest",
   ],
   title: "ChatModel",
 } as const;
@@ -321,7 +321,7 @@ export const $ChatRequest = {
           $ref: "#/components/schemas/ChatModel",
         },
       ],
-      default: "gemini-2.5-flash-lite",
+      default: "fast-latest",
     },
     pro_search: {
       type: "boolean",

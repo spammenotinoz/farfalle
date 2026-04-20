@@ -7,9 +7,9 @@ load_dotenv()
 
 
 class ChatModel(str, Enum):
-    FAST = "gemini-2.5-flash-lite"
-    POWERFUL = "gemini-3-flash"
-    TECHNICAL = "gemini-3-flash-technical"
+    FAST = "fast-latest"
+    THINKING = "thinking-latest"
+    TECHNICAL = "technical-latest"
 
 
 def get_model_string(model: ChatModel) -> str:

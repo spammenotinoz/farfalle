@@ -36,7 +36,7 @@ type Model = {
 export const modelMap: Record<ChatModel, Model> = {
   [ChatModel.FAST]: {
     name: "Fast",
-    description: "Google/Gemini-2.5-Flash-Lite",
+    description: "",
     value: ChatModel.FAST,
     smallIcon: <Zap className="w-4 h-4" />,
     icon: <Zap className="w-5 h-5" />,
@@ -44,7 +44,7 @@ export const modelMap: Record<ChatModel, Model> = {
   },
   [ChatModel.POWERFUL]: {
     name: "Powerful",
-    description: "Google/Gemini-3-Flash",
+    description: "",
     value: ChatModel.POWERFUL,
     smallIcon: <Cpu className="w-4 h-4" />,
     icon: <Cpu className="w-5 h-5" />,
@@ -52,7 +52,7 @@ export const modelMap: Record<ChatModel, Model> = {
   },
   [ChatModel.TECHNICAL]: {
     name: "Technical",
-    description: "Google/Gemini-3-Flash",
+    description: "",
     value: ChatModel.TECHNICAL,
     smallIcon: <Terminal className="w-4 h-4" />,
     icon: <Terminal className="w-5 h-5" />,

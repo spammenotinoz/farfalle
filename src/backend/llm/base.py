@@ -25,7 +25,7 @@ class BaseLLM(ABC):
 
 
 class OpenAILLM(BaseLLM):
-    def __init__(self, model: str = "gemini-3-flash"):
+    def __init__(self, model: str = "thinking-latest"):
         self.api_key = os.environ.get("OPENAI_API_KEY")
         if not self.api_key:
             raise ValueError("OPENAI_API_KEY environment variable not set")
