@@ -1,5 +1,8 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import {
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import Providers from "@/providers";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -55,7 +58,9 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <Navbar />
+              <TooltipProvider>
               {children}
+              </TooltipProvider>
               <Toaster />
               <Footer />
               <Analytics />
