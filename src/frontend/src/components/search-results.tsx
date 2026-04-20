@@ -49,7 +49,7 @@ export function SearchResults({ results }: { results: SearchResult[] }) {
         </span>
         {extra > 0 && !showAll && (
           <button
-            className="text-xs text-tint hover:underline"
+            className="text-xs text-tint hover:opacity-70 transition-opacity"
             onClick={() => setShowAll(true)}
           >
             View all →
@@ -66,17 +66,17 @@ export function SearchResults({ results }: { results: SearchResult[] }) {
               target="_blank"
               rel="noopener noreferrer"
               className="block"
-              initial={{ opacity: 0, scale: 0.96 }}
+              initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ delay: i * 0.05 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ delay: i * 0.04, duration: 0.2 }}
             >
-              <Card className="h-full rounded-xl border-border/50 hover:border-tint/40 hover:shadow-sm transition-all duration-200 overflow-hidden">
-                <CardContent className="p-3 flex flex-col gap-2">
+              <Card className="h-full rounded-xl border border-border hover:border-tint/40 hover:shadow-sm transition-all duration-200 overflow-hidden bg-card">
+                <CardContent className="p-3 flex flex-col gap-1.5">
                   <div className="flex items-start gap-2">
-                    <Logo url={url} size={16} />
+                    <Logo url={url} size={14} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium line-clamp-2 leading-tight">
+                      <p className="text-xs font-medium line-clamp-2 leading-tight text-foreground">
                         {title}
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -85,7 +85,7 @@ export function SearchResults({ results }: { results: SearchResult[] }) {
                     </div>
                     <ExternalLink
                       size={10}
-                      className="flex-shrink-0 text-muted-foreground"
+                      className="flex-shrink-0 text-muted-foreground mt-0.5"
                     />
                   </div>
                   {content && (
@@ -102,7 +102,7 @@ export function SearchResults({ results }: { results: SearchResult[] }) {
 
       {showAll && extra > 0 && (
         <button
-          className="w-full text-center text-xs text-muted-foreground hover:text-foreground py-2"
+          className="w-full text-center text-xs text-muted-foreground hover:text-foreground py-1.5 transition-colors"
           onClick={() => setShowAll(false)}
         >
           Show fewer

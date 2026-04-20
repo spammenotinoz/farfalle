@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { Suspense } from "react";
 import { useParams } from "next/navigation";
-import { Separator } from "@/components/ui/separator";
-import { ChatMessage } from "../../../../generated";
 import { ChatPanel } from "@/components/chat-panel";
 
 export default function ChatPage() {
@@ -11,17 +9,15 @@ export default function ChatPage() {
   const threadId = parseInt(slug as string, 10);
 
   return (
-    <div className="h-screen">
-      <div className="chat-layout">
-        <div className="chat-center">
+    <div className="app-container">
+      <main className="app-main pt-16">
+        <div className="content-column flex flex-col flex-1 min-h-0">
           <Suspense>
             <ChatPanel threadId={threadId} />
           </Suspense>
         </div>
-        <div className="chat-sidebar" id="sources-sidebar-search">
-          {/* Sources sidebar — populated by ChatPanel via portal */}
-        </div>
-      </div>
+        <div id="sources-sidebar-search" className="hidden lg:block" />
+      </main>
     </div>
   );
 }

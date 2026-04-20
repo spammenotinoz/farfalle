@@ -4,19 +4,16 @@ import { Suspense } from "react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="app-container">
       <Navbar />
-      <main className="pt-16">
-        <div className="chat-layout">
-          <div className="chat-center">
-            <Suspense>
-              <ChatPanel />
-            </Suspense>
-          </div>
-          <div className="chat-sidebar" id="sources-sidebar">
-            {/* Sources sidebar — populated by ChatPanel via portal */}
-          </div>
+      <main className="app-main pt-16">
+        <div className="content-column flex flex-col flex-1 min-h-0">
+          <Suspense>
+            <ChatPanel />
+          </Suspense>
         </div>
+        {/* Sources sidebar — populated by ChatPanel via portal */}
+        <div id="sources-sidebar" className="hidden lg:block" />
       </main>
     </div>
   );

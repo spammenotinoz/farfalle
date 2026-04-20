@@ -18,7 +18,6 @@ import { PanelRightOpen, X } from "lucide-react";
 
 const useAutoScroll = (ref: React.RefObject<HTMLDivElement>) => {
   const { messages } = useChatStore();
-
   useEffect(() => {
     if (messages.at(-1)?.role === MR.USER) {
       ref.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -31,7 +30,6 @@ const useAutoResizeInput = (
   setWidth: (width: number) => void,
 ) => {
   const { messages } = useChatStore();
-
   useEffect(() => {
     const updatePosition = () => {
       if (ref.current) setWidth(ref.current.scrollWidth);
@@ -46,7 +44,6 @@ const useAutoFocus = (ref: React.RefObject<HTMLTextAreaElement>) => {
   useEffect(() => ref.current?.focus(), [ref]);
 };
 
-// Extract the latest assistant message's sources for the sidebar
 function useLatestSources(): SearchResult[] {
   const { messages } = useChatStore();
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -92,15 +89,13 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
       setThreadId(null);
       handleSend(queryMessage);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryMessage]);
+  }, [queryMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!thread) return;
     setThreadId(thread.thread_id);
     setMessages(thread.messages || []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [threadId, thread]);
+  }, [threadId, thread]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (messages.length === 0) setThreadId(null);
@@ -109,61 +104,57 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
   const showSidebar = latestSources.length > 0;
   const sidebarPortalId = threadId ? "sources-sidebar-search" : "sources-sidebar";
 
+  // ─── Empty state: homepage ─────────────────────────────────────────────
   if (messages.length === 0 && !threadId) {
     return (
-      <div className="w-full flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4">
-        {/* Hero search */}
-        <div className="w-full max-w-2xl mb-10">
-          <div className="text-center mb-8">
-            <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-foreground mb-3">
-              Ask anything
-            </h1>
-            <p className="text-base text-muted-foreground">
-              Deep research on anything — powered by live web search
-            </p>
-          </div>
+      <div className="flex flex-col items-center w-full py-24 sm:py-32 px-4">
+        {/* Headline */}
+        <div className="text-center mb-10 animate-fade-in">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-tight mb-3">
+            Ask anything
+          </h1>
+          <p className="text-base text-muted-foreground">
+            Search the web, get answers powered by live sources
+          </p>
+        </div>
+
+        {/* Search bar */}
+        <div className="w-full max-w-2xl mb-14 animate-slide-up" style={{ animationDelay: "80ms" }}>
           <AskInput sendMessage={handleSend} />
         </div>
 
-        {/* Topic cards */}
-        <div className="w-full max-w-2xl">
+        {/* Topics */}
+        <div className="w-full max-w-2xl animate-slide-up" style={{ animationDelay: "160ms" }}>
           <StarterQuestionsList handleSend={handleSend} />
         </div>
-
-        {/* Keyboard hint */}
-        <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
-          <kbd className="px-2 py-1 bg-muted rounded-md font-mono text-[11px]">↵</kbd>
-          <span>to search</span>
-        </div>
       </div>
     );
   }
 
+  // ─── Loading ────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="w-full flex justify-center items-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <LoaderIcon className="animate-spin w-8 h-8 text-tint" />
-          <p className="text-sm text-muted-foreground">Loading conversation...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center flex-1 py-32">
+        <LoaderIcon className="animate-spin w-7 h-7 text-tint mb-3" />
+        <p className="text-sm text-muted-foreground">Loading conversation…</p>
       </div>
     );
   }
 
+  // ─── Error ──────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="w-full flex justify-center items-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <p className="text-destructive">Failed to load conversation</p>
-          <p className="text-sm text-muted-foreground">{error.message}</p>
-        </div>
+      <div className="flex flex-col items-center justify-center flex-1 py-32 text-center">
+        <p className="text-destructive text-sm font-medium mb-1">Failed to load</p>
+        <p className="text-xs text-muted-foreground">{error.message}</p>
       </div>
     );
   }
 
+  // ─── Main conversation view ────────────────────────────────────────────
   return (
     <>
-      <div ref={messagesRef} className="pt-4 pb-40 w-full relative">
+      <div ref={messagesRef} className="pt-6 pb-44 w-full relative">
         <MessagesList
           messages={messages}
           streamingMessage={streamingMessage}
@@ -172,20 +163,26 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
           onRelatedQuestionSelect={handleSend}
         />
         <div ref={messageBottomRef} className="h-0" />
+
+        {/* Fixed bottom input */}
         <div
-          className="fixed bottom-0 left-0 right-0 px-4 md:px-8 bg-gradient-to-t from-background via-background to-transparent pt-8 pb-4"
-          style={{ width: `${width}px`, margin: "0 auto", maxWidth: "calc(100vw - 2rem)" }}
+          className="fixed bottom-0 left-0 right-0 px-4 sm:px-6 bg-gradient-to-t from-background via-background to-transparent pt-10 pb-4"
+          style={{
+            width: `${width}px`,
+            margin: "0 auto",
+            maxWidth: "calc(100vw - 2rem)",
+          }}
         >
-          <div className="mx-auto" style={{ maxWidth: "760px" }}>
+          <div style={{ maxWidth: "768px", margin: "0 auto" }}>
             <AskInput isFollowingUp sendMessage={handleSend} />
           </div>
         </div>
       </div>
 
-      {/* Tablet: floating toggle to open mobile sidebar */}
+      {/* Tablet: floating sidebar toggle */}
       {showSidebar && (
         <button
-          className="sidebar-toggle hidden max-[1200px]:flex"
+          className="sidebar-toggle hidden max-[1100px]:flex"
           onClick={() => setSidebarOpen((v) => !v)}
           aria-label={sidebarOpen ? "Hide sources" : "Show sources"}
         >
@@ -193,16 +190,16 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
         </button>
       )}
 
-      {/* Mobile sidebar: slide-in panel over content */}
+      {/* Mobile sidebar: slide-in */}
       {showSidebar && sidebarOpen && mounted && (
         <>
           <div
-            className="fixed inset-0 bg-black/30 z-30 hidden max-[1200px]:block"
+            className="fixed inset-0 bg-black/20 z-30 hidden max-[1100px]:block"
             onClick={() => setSidebarOpen(false)}
           />
           <div
-            className="fixed right-0 top-16 bottom-0 w-80 bg-background border-l z-40 p-4 overflow-y-auto shadow-2xl hidden max-[1200px]:block"
-            style={{ animation: "slide-in-right 0.25s ease-out" }}
+            className="fixed right-0 top-16 bottom-0 w-80 bg-background border-l z-40 p-4 overflow-y-auto shadow-2xl hidden max-[1100px]:block"
+            style={{ animation: "slide-in-right 0.2s ease-out" }}
           >
             <SourcesSidebar results={latestSources} />
           </div>

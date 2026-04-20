@@ -5,14 +5,12 @@ import {
 } from "@/components/ui/tooltip";
 import Providers from "@/providers";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { GeistSans } from "geist/font/sans";
 import { JetBrains_Mono as Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/react";
 import { Navbar } from "@/components/nav";
-import { Footer } from "@/components/footer";
 
 const mono = Mono({
   subsets: ["latin"],
@@ -62,7 +60,6 @@ export default function RootLayout({
               {children}
               </TooltipProvider>
               <Toaster />
-              <Footer />
               <Analytics />
             </ThemeProvider>
           </Providers>
