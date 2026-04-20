@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c *)",
+      "Bash(python3 -m *)",
+      "Bash(pnpm generate *)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm build *)",
+      "Bash(pnpm dev *)",
+      "Bash(cd *)",
+      "Bash(poetry run uvicorn *)",
+      "Bash(poetry run *)",
+      "Bash(curl *)",
+      "Bash(pkill *)",
+      "Bash(kill *)",
+      "Bash(pip3 *)",
+      "Bash(pip *)"
+    ]
+  }
+}

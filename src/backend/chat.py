@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 from backend.constants import get_model_string
 from backend.db.chat import save_turn_to_db
 from backend.llm.base import BaseLLM, OpenAILLM
-from backend.prompts import CHAT_PROMPT, HISTORY_QUERY_REPHRASE
+from backend.page_reader import read_pages, format_pages_for_context
+from backend.prompts import SYSTEM_PROMPT_STANDARD, HISTORY_QUERY_REPHRASE
 from backend.related_queries import generate_related_queries
 from backend.schemas import (
     BeginStream,
@@ -51,6 +52,19 @@ def format_context(search_results: List[SearchResult]) -> str:
     )
 
 
+def format_context_with_pages(
+    search_results: List[SearchResult], pages_context: str
+) -> str:
+    """Combine search result snippets with full page content."""
+    result_context = format_context(search_results)
+    if pages_context:
+        return (
+            f"## Search Result Summaries\n{result_context}\n\n"
+            f"## Full Page Content (fetched from top sources)\n{pages_context}"
+        )
+    return result_context
+
+
 async def stream_qa_objects(
     request: ChatRequest, session: Session
 ) -> AsyncIterator[ChatResponseEvent]:
@@ -70,13 +84,6 @@ async def stream_qa_objects(
         search_results = search_response.results
         images = search_response.images
 
-        # Only create the task first if the model is not local
-        related_queries_task = None
-        if not is_local_model(request.model):
-            related_queries_task = asyncio.create_task(
-                generate_related_queries(query, search_results, llm)
-            )
-
         yield ChatResponseEvent(
             event=StreamEvent.SEARCH_RESULTS,
             data=SearchResultStream(
@@ -85,17 +92,37 @@ async def stream_qa_objects(
             ),
         )
 
-        fmt_qa_prompt = CHAT_PROMPT.format(
-            my_context=format_context(search_results),
+        # Fetch full content from top source pages for richer context
+        source_urls = [r.url for r in search_results[:4]]
+        pages = await read_pages(source_urls, max_pages=4, concurrency=3)
+        pages_context = format_pages_for_context(pages)
+
+        # Start related queries generation in parallel (no need to await before streaming)
+        related_queries_task = None
+        if not is_local_model(request.model):
+            related_queries_task = asyncio.create_task(
+                generate_related_queries(query, search_results, llm)
+            )
+
+        # Build context: snippets + page content
+        context = format_context_with_pages(search_results, pages_context)
+        fmt_qa_prompt = SYSTEM_PROMPT_STANDARD.format(
+            my_context=context,
             my_query=query,
         )
 
-        full_response = await llm.astream(fmt_qa_prompt)
-        yield ChatResponseEvent(
-            event=StreamEvent.TEXT_CHUNK,
-            data=TextChunkStream(text=full_response),
-        )
+        # Stream tokens one at a time for true streaming UX
+        full_response_parts: List[str] = []
+        async for token in llm.astream(fmt_qa_prompt):
+            full_response_parts.append(token)
+            yield ChatResponseEvent(
+                event=StreamEvent.TEXT_CHUNK,
+                data=TextChunkStream(text=token),
+            )
 
+        full_response = "".join(full_response_parts)
+
+        # Gather related queries (from task or fresh)
         related_queries = await (
             related_queries_task
             if related_queries_task
