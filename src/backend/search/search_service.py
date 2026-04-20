@@ -9,6 +9,7 @@ from backend.search.providers.base import SearchProvider
 from backend.search.providers.bing import BingSearchProvider
 from backend.search.providers.searxng import SearxngSearchProvider
 from backend.search.providers.serper import SerperSearchProvider
+from backend.search.providers.tavily import TavilySearchProvider
 
 load_dotenv()
 
@@ -62,8 +63,6 @@ def get_search_provider() -> SearchProvider:
             return SearxngSearchProvider(searxng_base_url)
         case "tavily":
             tavily_api_key = get_tavily_api_key()
-            from backend.search.providers.tavily import TavilySearchProvider
-
             return TavilySearchProvider(tavily_api_key)
         case "serper":
             serper_api_key = get_serper_api_key()
