@@ -72,8 +72,9 @@ class OpenAILLM(BaseLLM):
         url = f"{self.base_url}/chat/completions"
         headers = {"Authorization": f"Bearer {self.api_key}"}
 
-        # For Gemini, add JSON mode instruction to the prompt
-        instruction = f'\n\nRespond with valid JSON matching this schema:\n{response_model.model_json_schema()}'
+        # For structured completions, add JSON mode instruction to the prompt
+        schema_str = response_model.model_json_schema()
+        instruction = f'\n\nRespond with valid JSON matching this schema:\n{schema_str}'
         full_prompt = prompt + instruction
 
         data = {
