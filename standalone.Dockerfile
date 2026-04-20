@@ -43,6 +43,11 @@ WORKDIR /app
 # Copy package files
 COPY src/frontend/package.json src/frontend/pnpm-lock.yaml ./
 
+# Create .env for Next.js build (reads NEXT_PUBLIC_* vars at build time)
+RUN echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" >> .env && \
+    echo "NEXT_PUBLIC_LOCAL_MODE_ENABLED=${NEXT_PUBLIC_LOCAL_MODE_ENABLED}" >> .env && \
+    echo "NEXT_PUBLIC_PRO_MODE_ENABLED=${NEXT_PUBLIC_PRO_MODE_ENABLED}" >> .env
+
 # Install dependencies (including dev for build)
 RUN npm install -g pnpm && \
     pnpm install --force
