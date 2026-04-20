@@ -31,6 +31,8 @@ Instructions:
 - Generate exactly 3 questions.
 - These questions should be concise, and simple.
 - Ensure the follow-up questions are relevant to the original question and context.
+- Respond ONLY with valid JSON matching this schema: {"related_questions": ["question 1", "question 2", "question 3"]}
+- Do not include any text outside the JSON.
 Make sure to match the language of the user's question.
 
 Original Question: {query}
@@ -38,9 +40,7 @@ Original Question: {query}
 {context}
 </context>
 
-Output:
-related_questions: A list of EXACTLY three concise, simple follow-up questions
-"""
+Output (JSON only):"""
 
 HISTORY_QUERY_REPHRASE = """
 Given the following conversation and a follow up input, rephrase the follow up into a SHORT, \

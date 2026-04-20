@@ -36,7 +36,7 @@ class ChatRequest(BaseModel):
 
 
 class RelatedQueries(BaseModel):
-    related_questions: List[str] = Field(..., min_length=3, max_length=3)
+    related_questions: List[str] = Field(default=[], min_length=0)
 
 
 class SearchResult(BaseModel):

@@ -92,17 +92,32 @@ class OpenAILLM(BaseLLM):
         if json_match:
             json_str = json_match.group(1)
         else:
-            # Try to find any JSON object
-            json_match = re.search(r'\{[^{}]*\}', content, re.DOTALL)
+            # Try to find any JSON object (handles nested braces)
+            json_match = re.search(r'\{[\s\S]*\}', content)
             if json_match:
                 json_str = json_match.group(0)
             else:
                 json_str = content
 
+        # Strip any non-JSON prefix/suffix (e.g. "Here is the JSON: { ... }")
+        json_str = json_str.strip()
+        if not json_str.startswith('{'):
+            # Find the first '{' and take everything from there
+            first_brace = json_str.find('{')
+            if first_brace != -1:
+                json_str = json_str[first_brace:]
+
         try:
             return response_model.model_validate_json(json_str)
         except Exception:
-            return None
+            # Return a model instance with all fields at their defaults
+            defaults = {}
+            for name, field_info in response_model.model_fields.items():
+                if field_info.default is not None:
+                    defaults[name] = field_info.default
+                elif field_info.default_factory is not None:
+                    defaults[name] = field_info.default_factory()
+            return response_model.model_construct(**defaults)
 
     async def close(self):
         await self.client.aclose()

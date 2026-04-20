@@ -12,5 +12,7 @@ async def generate_related_queries(
         RelatedQueries, RELATED_QUESTION_PROMPT.format(query=query, context=context)
     )
 
-    questions = getattr(related, 'related_questions', None) or []
+    questions = getattr(related, 'related_questions', None)
+    if questions is None:
+        return []
     return [q.lower().replace("?", "") for q in questions]

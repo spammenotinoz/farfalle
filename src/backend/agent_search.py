@@ -115,6 +115,11 @@ async def stream_pro_search_objects(
     query_plan = await llm.structured_complete(
         response_model=QueryPlan, prompt=query_plan_prompt
     )
+    if query_plan is None or not query_plan.steps:
+        raise HTTPException(
+            status_code=500,
+            detail="There was an error generating the query plan",
+        )
     print(query_plan)
 
     yield ChatResponseEvent(
@@ -143,12 +148,12 @@ async def stream_pro_search_objects(
             query_step_execution = await llm.structured_complete(
                 response_model=QueryStepExecution, prompt=search_prompt
             )
-            search_queries = query_step_execution.search_queries
-            if not search_queries:
+            if query_step_execution is None or not query_step_execution.search_queries:
                 raise HTTPException(
                     status_code=500,
                     detail="There was an error generating the search queries",
                 )
+            search_queries = query_step_execution.search_queries
 
             yield ChatResponseEvent(
                 event=StreamEvent.AGENT_SEARCH_QUERIES,
