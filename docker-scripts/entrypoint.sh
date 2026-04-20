@@ -12,14 +12,6 @@ run_frontend() {
     exec pnpm start
 }
 
-run_searxng() {
-    echo "Running searxng"
-    cd /workspace/searxng
-    export SEARXNG_SETTINGS_PATH="/workspace/searxng/settings.yml"
-    python3 searx/webapp.py
-}
-
-# Start services in background
-run_searxng &
+# Start services — backend runs foreground, frontend runs in background
 run_frontend &
 run_backend
