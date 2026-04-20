@@ -73,8 +73,12 @@ class OpenAILLM(BaseLLM):
         headers = {"Authorization": f"Bearer {self.api_key}"}
 
         # For structured completions, add JSON mode instruction to the prompt
-        schema_str = response_model.model_json_schema()
-        instruction = "\n\nRespond with valid JSON matching this schema:\n" + schema_str
+        # Build schema manually to avoid f-string interpolation issues with curly braces
+        fields = []
+        for name, field_info in response_model.model_fields.items():
+            fields.append('"' + name + '": "<value>\"')
+        schema_str = '{"' + response_model.__name__ + '": {' + ', '.join(fields) + '}}'
+        instruction = "\n\nIMPORTANT: Respond ONLY with valid JSON matching this exact schema:\n" + schema_str + "\nDo not include any text outside the JSON."
         full_prompt = prompt + instruction
 
         data = {
