@@ -6,7 +6,8 @@
       "Bash(npm run build)",
       "Bash(npx @hey-api/openapi-ts --input http://localhost:8000/openapi.json --output ../frontend/generated)",
       "Bash(python -c \"\nfrom backend.schemas import ChatRequest, ChatModel\nimport json\n\n# Print the ChatModel values\nprint\\(''ChatModel values:''\\)\nfor model in ChatModel:\n    print\\(f''  {model.name}: {model.value}''\\)\n\n# Check if we can create a valid request\nreq = ChatRequest\\(query=''test''\\)\nprint\\(f''\\\\nDefault model: {req.model}''\\)\nprint\\(f''Query: {req.query}''\\)\nprint\\(f''History: {req.history}''\\)\nprint\\(f''Pro search: {req.pro_search}''\\)\n\")",
-      "Bash(npm --version)"
+      "Bash(npm --version)",
+      "Bash(pnpm *)"
     ]
   }
 }

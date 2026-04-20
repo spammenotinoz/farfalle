@@ -129,10 +129,10 @@ const CollapsibleSection = ({
         onClick={() => setOpen(v => !v)}
       >
         <div className="flex items-center gap-2">
-          <Icon size={14} className="text-tint/70" />
+          <span className="text-tint/70"><Icon size={14} /></span>
           <span className="text-sm font-medium text-foreground/80">{title}</span>
         </div>
-        {open ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
+        {open ? <span className="text-muted-foreground"><ChevronUp size={14} /></span> : <span className="text-muted-foreground"><ChevronDown size={14} /></span>}
       </button>
       {open && <div className="research-section-body">{children}</div>}
     </div>
