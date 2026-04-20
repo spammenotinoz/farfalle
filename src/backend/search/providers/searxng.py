@@ -26,8 +26,11 @@ class SearxngSearchProvider(SearchProvider):
             f"{self.host}/search",
             params={"q": query, "format": "json"},
         )
-        results = response.json()
 
+        if response.status_code >= 400:
+            raise RuntimeError(f"SearXNG error {response.status_code}: {response.text}")
+
+        results = response.json()
         return [
             SearchResult(
                 title=result["title"],

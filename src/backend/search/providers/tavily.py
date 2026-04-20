@@ -16,21 +16,40 @@ class TavilySearchProvider(SearchProvider):
 
     async def search(self, query: str) -> SearchResponse:
         async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
-            link_results = await self.get_link_results(client, query)
-            image_results = await self.get_image_results(client, query)
+            link_results, image_results = await asyncio.gather(
+                self.get_link_results(client, query),
+                self.get_image_results(client, query),
+            )
 
         return SearchResponse(results=link_results, images=image_results)
 
     async def get_link_results(
         self, client: httpx.AsyncClient, query: str, num_results: int = 6
     ) -> list[SearchResult]:
+        print(f"[Tavily] Searching: {query!r}")
         response = await client.post(
             self.host,
             headers=self.headers,
             json={"query": query, "search_depth": "basic", "max_results": num_results},
         )
+
+        print(f"[Tavily] Status: {response.status_code}")
+        print(f"[Tavily] Body: {response.text[:500]}")
+
+        if response.status_code == 401:
+            raise PermissionError("Tavily API key is invalid. Check TAVILY_API_KEY.")
+        if response.status_code == 403:
+            raise PermissionError("Tavily API access forbidden. Is your plan active?")
+        if response.status_code >= 400:
+            raise RuntimeError(f"Tavily API error {response.status_code}: {response.text}")
+
         results = response.json()
 
+        if "results" not in results and "detail" in results:
+            raise RuntimeError(f"Tavily error: {results['detail']}")
+
+        count = len(results.get("results", []))
+        print(f"[Tavily] Got {count} results")
         return [
             SearchResult(
                 title=result["title"],
@@ -43,18 +62,20 @@ class TavilySearchProvider(SearchProvider):
     async def get_image_results(
         self, client: httpx.AsyncClient, query: str, num_results: int = 4
     ) -> list[str]:
-        # Re-use the main query to get images that are contextually related to
-        # the actual search results, avoiding generic image search drift
         response = await client.post(
             self.host,
             headers=self.headers,
-            json={"query": query, "search_depth": "basic", "max_results": num_results},
+            json={
+                "query": query,
+                "search_depth": "basic",
+                "max_results": num_results,
+                "include_images": True,
+            },
         )
-        results = response.json()
 
-        # Collect image URLs from result thumbnails/media fields
-        images: list[str] = []
-        for result in results.get("results", [])[:num_results]:
-            if "image" in result and result["image"]:
-                images.append(result["image"])
-        return images[:num_results]
+        if response.status_code >= 400:
+            # Don't let image failures break the whole search
+            return []
+
+        results = response.json()
+        return [img["url"] for img in results.get("images", [])[:num_results]]

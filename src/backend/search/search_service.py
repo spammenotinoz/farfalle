@@ -82,8 +82,17 @@ async def perform_search(query: str) -> SearchResponse:
 
     try:
         results = await search_provider.search(query)
+        if not results.results:
+            raise HTTPException(
+                status_code=502,
+                detail=(
+                    f"No search results returned from "
+                    f"{os.getenv('SEARCH_PROVIDER', 'search provider')}. "
+                    f"Check that the API key is valid and the service is accessible."
+                ),
+            )
         return results
-    except Exception:
-        raise HTTPException(
-            status_code=500, detail="There was an error while searching."
-        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
