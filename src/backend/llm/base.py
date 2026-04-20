@@ -99,7 +99,10 @@ class OpenAILLM(BaseLLM):
             else:
                 json_str = content
 
-        return response_model.model_validate_json(json_str)
+        try:
+            return response_model.model_validate_json(json_str)
+        except Exception:
+            return None
 
     async def close(self):
         await self.client.aclose()
