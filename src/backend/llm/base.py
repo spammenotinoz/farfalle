@@ -74,7 +74,7 @@ class OpenAILLM(BaseLLM):
 
         # For structured completions, add JSON mode instruction to the prompt
         schema_str = response_model.model_json_schema()
-        instruction = f'\n\nRespond with valid JSON matching this schema:\n{schema_str}'
+        instruction = "\n\nRespond with valid JSON matching this schema:\n" + schema_str
         full_prompt = prompt + instruction
 
         data = {
