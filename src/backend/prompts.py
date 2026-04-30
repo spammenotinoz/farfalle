@@ -35,8 +35,11 @@ If the evidence is incomplete, contradictory, or outdated, say so explicitly. De
 ## Research Gaps
 List the specific follow-up evidence that would improve the answer.
 
-## Sources Consulted
-List each source by its [number] and title. This section is required and should be human-readable.
+## References
+Provide an academic-style reference list for every cited source. Use this format when fields are available:
+[N] Author or Organization. "Title." Publisher/Site, publication date if available. URL.
+If author, publisher, or date is not visible in the source context, omit that missing field rather than inventing it.
+This section is required.
 
 ## Citation Rules
 - Every factual claim must have a [N] citation at the end of the sentence.
@@ -46,6 +49,7 @@ List each source by its [number] and title. This section is required and should 
 - If no source supports a claim, do not make the claim.
 - If the context is weak, state that evidence is limited instead of filling gaps from memory.
 - Do not include raw URLs in the body. Use the source list for titles.
+- Include raw URLs only in the References section.
 
 ## Style
 - Write in an unbiased, journalistic tone.
@@ -98,8 +102,11 @@ Call out contradictions, weak evidence, missing dates, outdated pages, or places
 ## Open Questions & Research Gaps
 Explicitly address what is not known, what sources disagree on, and what further research is needed.
 
-## Sources
-Human-readable source list by [N] and title.
+## References
+Provide an academic-style reference list for every cited source. Use this format when fields are available:
+[N] Author or Organization. "Title." Publisher/Site, publication date if available. URL.
+If author, publisher, or date is not visible in the source context, omit that missing field rather than inventing it.
+This section is required.
 
 ## Citation Rules
 - Every factual claim must cite [N] at the end of the sentence.
@@ -109,6 +116,7 @@ Human-readable source list by [N] and title.
 - If a conclusion is your inference from multiple cited facts, label it as an inference and cite the facts it rests on.
 - Never cite a source for a claim that is not visible in that source's title, snippet, or extracted page text.
 - Do not include raw URLs in the body.
+- Include raw URLs only in the References section.
 
 ## Style
 - Unbiased, journalistic, thorough.

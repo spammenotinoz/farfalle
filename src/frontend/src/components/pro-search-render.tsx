@@ -184,9 +184,11 @@ const ProSearchSkeleton = () => (
 export const ProSearchRender = ({
   streamingProResponse,
   isStreamingProSearch = false,
+  reportStarted = false,
 }: {
   streamingProResponse: AgentSearchFullResponse | null;
   isStreamingProSearch?: boolean;
+  reportStarted?: boolean;
 }) => {
   if (!streamingProResponse?.steps_details) {
     return isStreamingProSearch ? <ProSearchSkeleton /> : null;
@@ -200,7 +202,12 @@ export const ProSearchRender = ({
     (step) => step.status === AgentSearchStepStatus.CURRENT,
   );
   const activeIndex = currentIndex === -1 ? Math.max(doneCount - 1, 0) : currentIndex;
-  const progress = steps.length ? Math.round((doneCount / steps.length) * 100) : 0;
+  const researchComplete = reportStarted || (!isStreamingProSearch && doneCount > 0);
+  const progress = researchComplete
+    ? 100
+    : steps.length
+      ? Math.round((doneCount / steps.length) * 100)
+      : 0;
   const currentStep = steps[activeIndex]?.step ?? "Synthesizing findings";
   const sourceCount = steps.reduce(
     (total, step) => total + (step.results?.length ?? 0),
@@ -218,7 +225,9 @@ export const ProSearchRender = ({
       <div className="border-b bg-muted/20 px-3 py-2.5">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-tint/10 text-tint">
-            {isStreamingProSearch ? (
+            {researchComplete ? (
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            ) : isStreamingProSearch ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Sparkles className="h-4 w-4" />
@@ -227,14 +236,16 @@ export const ProSearchRender = ({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold leading-tight">
-                Research in progress
+                {researchComplete ? "Research complete" : "Research in progress"}
               </p>
-              {isStreamingProSearch && (
+              {isStreamingProSearch && !researchComplete && (
                 <span className="h-1.5 w-1.5 rounded-full bg-tint animate-pulse" />
               )}
             </div>
             <p className="truncate text-xs text-muted-foreground">
-              {currentStep}
+              {reportStarted
+                ? "Sources gathered. Generating report below."
+                : currentStep}
             </p>
           </div>
           <div className="hidden flex-shrink-0 items-center gap-1.5 rounded bg-background px-2 py-1 text-[11px] text-muted-foreground sm:flex">

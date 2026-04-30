@@ -51,7 +51,10 @@ const MessagesList = ({
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
               {message.agent_response && (
-                <ProSearchRender streamingProResponse={message.agent_response} />
+                <ProSearchRender
+                  streamingProResponse={message.agent_response}
+                  reportStarted={Boolean(message.content?.trim())}
+                />
               )}
               <AssistantMessageContent
                 message={message}
@@ -75,6 +78,7 @@ const MessagesList = ({
           <ProSearchRender
             streamingProResponse={streamingProResponse}
             isStreamingProSearch={isStreamingProSearch}
+            reportStarted={hasReportText}
           />
         </motion.div>
       )}
@@ -87,6 +91,17 @@ const MessagesList = ({
         >
           <Loader2 className="h-4 w-4 animate-spin" />
           Reading sources and preparing the report...
+        </motion.div>
+      )}
+
+      {streamingMessage && isStreamingMessage && hasReportText && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-3 flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300"
+        >
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Generating report...
         </motion.div>
       )}
 
