@@ -4,7 +4,7 @@ import { SearchResults } from "./search-results";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ImageSection } from "./image-section";
 import { ChatMessage } from "../../generated";
-import { Copy, Share2, Download, MoreHorizontal, FileText } from "lucide-react";
+import { Copy, Share2, Download, MoreHorizontal, FileText, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -106,14 +106,26 @@ const ContentActions = ({ content }: { content: string }) => {
 };
 
 // ─── Answer Meta Bar ────────────────────────────────────────────────────
-const AnswerMetaBar = ({ sources }: { sources: ChatMessage["sources"] }) => {
+const AnswerMetaBar = ({
+  sources,
+  isStreaming,
+}: {
+  sources: ChatMessage["sources"];
+  isStreaming: boolean;
+}) => {
   if (!sources?.length) return null;
   return (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+    <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
       <span className="flex items-center gap-1.5">
         <BookOpen size={12} className="text-tint" />
-        <span>{sources.length} sources</span>
+        <span>{sources.length} sources in sidebar</span>
       </span>
+      {isStreaming && (
+        <span className="flex items-center gap-1.5 text-tint">
+          <Loader2 size={12} className="animate-spin" />
+          <span>Report still generating</span>
+        </span>
+      )}
     </div>
   );
 };
@@ -148,15 +160,24 @@ export const AssistantMessageContent = ({
       {/* Answer card */}
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <FileText size={15} className="text-tint" />
+          {isStreaming ? (
+            <Loader2 size={15} className="animate-spin text-tint" />
+          ) : (
+            <FileText size={15} className="text-tint" />
+          )}
           Research report
+          {isStreaming && (
+            <span className="rounded bg-tint/10 px-2 py-0.5 text-[11px] font-medium text-tint">
+              Generating
+            </span>
+          )}
         </div>
         {!isStreaming && content && <ContentActions content={content} />}
       </div>
 
       <div className="answer-card mb-4">
         {/* Meta bar */}
-        <AnswerMetaBar sources={sources} />
+        <AnswerMetaBar sources={sources} isStreaming={isStreaming} />
 
         {/* Answer content */}
         {content ? (

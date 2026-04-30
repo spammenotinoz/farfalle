@@ -8,6 +8,7 @@ import {
 } from "../../generated";
 import { ProSearchRender } from "./pro-search-render";
 import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
 
 const MessagesList = ({
   messages,
@@ -23,6 +24,8 @@ const MessagesList = ({
   onRelatedQuestionSelect: (question: string) => void;
 }) => {
   const streamingProResponse = streamingMessage?.agent_response;
+
+  const hasReportText = Boolean(streamingMessage?.content?.trim());
 
   return (
     <div className="flex flex-col pb-32">
@@ -73,6 +76,17 @@ const MessagesList = ({
             streamingProResponse={streamingProResponse}
             isStreamingProSearch={isStreamingProSearch}
           />
+        </motion.div>
+      )}
+
+      {streamingMessage && isStreamingProSearch && !hasReportText && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-3 flex items-center gap-2 rounded-md border border-tint/20 bg-tint/5 px-3 py-2 text-sm text-tint"
+        >
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Reading sources and preparing the report...
         </motion.div>
       )}
 

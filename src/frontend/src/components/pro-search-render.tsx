@@ -1,109 +1,182 @@
-import { memo, useEffect, useState } from "react";
-import { Separator } from "@/components/ui/separator";
+import { memo } from "react";
 import {
   AgentSearchFullResponse,
+  AgentSearchStep,
   AgentSearchStepStatus,
   SearchResult,
 } from "../../generated";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "./ui/accordion";
-import {
-  SearchIcon,
-  WandSparklesIcon,
+  BookOpen,
   CheckCircle2,
   Circle,
   Loader2,
+  SearchIcon,
+  Sparkles,
 } from "lucide-react";
 import { Logo } from "./search-results";
-import {
-  Timeline,
-  TimelineContent,
-  TimelineDot,
-  TimelineItem,
-  TimelineLine,
-} from "./ui/timeline";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "./ui/skeleton";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
-const StepSection = ({
+const statusCopy = {
+  [AgentSearchStepStatus.DONE]: "Done",
+  [AgentSearchStepStatus.CURRENT]: "Working",
+  [AgentSearchStepStatus.DEFAULT]: "Queued",
+};
+
+function compactDomain(url: string) {
+  try {
+    const hostname = new URL(url).hostname.replace("www.", "");
+    return hostname.split(".")[0];
+  } catch {
+    return url;
+  }
+}
+
+const EvidenceChips = ({
   queries,
   results,
 }: {
-  step: string;
   queries: string[];
   results: SearchResult[];
 }) => (
-  <div className="flex flex-col gap-3">
-    {queries.length > 0 && (
-      <div className="flex flex-wrap gap-1.5">
-        {queries.map((q, i) => (
-          <span
-            key={i}
-            className="inline-flex max-w-full items-center gap-1 rounded bg-muted/70 px-2 py-1 text-xs text-muted-foreground"
-          >
-            <SearchIcon className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">{q}</span>
-          </span>
-        ))}
-      </div>
-    )}
-
-    {results.length > 0 && (
-      <div className="flex flex-wrap gap-1.5">
-        {results.slice(0, 8).map((r, i) => (
-          <a
-            key={i}
-            href={r.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex max-w-full items-center gap-1 rounded bg-muted/50 px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted"
-          >
-            <Logo url={r.url} size={10} />
-            {(() => {
-              try {
-                return new URL(r.url).hostname.split(".").slice(-2, -1)[0];
-              } catch {
-                return r.url;
-              }
-            })()}
-          </a>
-        ))}
-        {results.length > 8 && (
-          <span className="text-[10px] text-muted-foreground px-1 py-0.5">
-            +{results.length - 8}
-          </span>
-        )}
-      </div>
+  <div className="mt-2 flex flex-wrap gap-1.5">
+    {queries.slice(0, 2).map((query, index) => (
+      <span
+        key={`query-${index}`}
+        className="inline-flex max-w-full items-center gap-1 rounded bg-tint/10 px-2 py-0.5 text-[11px] text-tint"
+      >
+        <SearchIcon className="h-3 w-3 flex-shrink-0" />
+        <span className="max-w-[220px] truncate">{query}</span>
+      </span>
+    ))}
+    {results.slice(0, 4).map((result, index) => (
+      <a
+        key={`result-${index}`}
+        href={result.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex max-w-full items-center gap-1 rounded bg-muted/60 px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <Logo url={result.url} size={10} />
+        <span className="max-w-[96px] truncate">{compactDomain(result.url)}</span>
+      </a>
+    ))}
+    {queries.length + results.length === 0 && (
+      <span className="text-[11px] text-muted-foreground">
+        Preparing searches...
+      </span>
     )}
   </div>
 );
 
+const StepIcon = ({ status }: { status: AgentSearchStepStatus }) => {
+  if (status === AgentSearchStepStatus.DONE) {
+    return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+  }
+
+  if (status === AgentSearchStepStatus.CURRENT) {
+    return (
+      <span className="relative flex h-4 w-4 items-center justify-center">
+        <span className="absolute h-4 w-4 rounded-full bg-tint/25 animate-ping" />
+        <Loader2 className="relative h-4 w-4 animate-spin text-tint" />
+      </span>
+    );
+  }
+
+  return <Circle className="h-4 w-4 text-muted-foreground/35" />;
+};
+
+const StepRow = memo(
+  ({
+    step,
+    index,
+    active,
+  }: {
+    step: AgentSearchStep;
+    index: number;
+    active: boolean;
+  }) => {
+    const status = step.status ?? AgentSearchStepStatus.DEFAULT;
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, delay: index * 0.02 }}
+        className={cn(
+          "rounded-md border px-3 py-2 transition-colors",
+          active
+            ? "border-tint/35 bg-tint/5"
+            : "border-border/60 bg-background/45",
+        )}
+      >
+        <div className="flex items-start gap-2.5">
+          <div className="mt-0.5 flex-shrink-0">
+            <StepIcon status={status} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-start gap-2">
+              <p
+                className={cn(
+                  "min-w-0 flex-1 truncate text-xs font-medium",
+                  active ? "text-foreground" : "text-foreground/75",
+                )}
+                title={step.step}
+              >
+                {step.step}
+              </p>
+              <span
+                className={cn(
+                  "flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
+                  status === AgentSearchStepStatus.DONE &&
+                    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                  status === AgentSearchStepStatus.CURRENT &&
+                    "bg-tint/10 text-tint",
+                  status === AgentSearchStepStatus.DEFAULT &&
+                    "bg-muted text-muted-foreground",
+                )}
+              >
+                {statusCopy[status]}
+              </span>
+            </div>
+            <AnimatePresence initial={false}>
+              {active && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <EvidenceChips
+                    queries={step.queries || []}
+                    results={step.results || []}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
+    );
+  },
+);
+
+StepRow.displayName = "StepRow";
+
 const ProSearchSkeleton = () => (
-  <div className="w-full rounded-md border bg-card/40 p-4 space-y-4">
-    <div className="flex items-center gap-3">
-      <div className="w-9 h-9 rounded-md bg-tint/10 flex items-center justify-center">
-        <WandSparklesIcon className="h-4 w-4 text-tint" />
-      </div>
-      <div>
-        <Skeleton className="h-4 w-28 rounded" />
-        <Skeleton className="h-3 w-36 mt-1 rounded" />
+  <div className="mb-3 rounded-md border bg-card/60 p-3">
+    <div className="flex items-center gap-2">
+      <Skeleton className="h-8 w-8 rounded-md" />
+      <div className="space-y-1">
+        <Skeleton className="h-3 w-32 rounded" />
+        <Skeleton className="h-2.5 w-44 rounded" />
       </div>
     </div>
-    <Separator />
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <Skeleton className="h-4 w-4 rounded-full" />
-        <Skeleton className="h-3 w-24 rounded" />
-      </div>
-      <div className="pl-6 space-y-2">
-        <Skeleton className="h-3 w-40 rounded" />
-        <Skeleton className="h-3 w-32 rounded" />
-      </div>
+    <div className="mt-3 space-y-1.5">
+      <Skeleton className="h-8 w-full rounded-md" />
+      <Skeleton className="h-8 w-11/12 rounded-md" />
     </div>
   </div>
 );
@@ -115,114 +188,80 @@ export const ProSearchRender = ({
   streamingProResponse: AgentSearchFullResponse | null;
   isStreamingProSearch?: boolean;
 }) => {
-  const [openSteps, setOpenSteps] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (!streamingProResponse?.steps_details) return;
-    const current = streamingProResponse.steps_details
-      .map((s, i) => ({ i, status: s.status }))
-      .filter((s) => s.status === AgentSearchStepStatus.CURRENT)
-      .map((s) => s.i.toString());
-    setOpenSteps(current);
-  }, [streamingProResponse]);
-
   if (!streamingProResponse?.steps_details) {
     return isStreamingProSearch ? <ProSearchSkeleton /> : null;
   }
 
-  const { steps_details: steps } = streamingProResponse;
-
-  const getIcon = (status: AgentSearchStepStatus) => {
-    switch (status) {
-      case AgentSearchStepStatus.DONE:
-        return (
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-        );
-      case AgentSearchStepStatus.CURRENT:
-        return (
-          <div className="relative">
-            <Circle className="h-4 w-4 text-tint" />
-            <Loader2 className="h-2.5 w-2.5 absolute top-[3px] left-[3px] animate-spin text-white" />
-          </div>
-        );
-      default:
-        return <Circle className="h-4 w-4 text-muted-foreground/30" />;
-    }
-  };
+  const steps = streamingProResponse.steps_details;
+  const doneCount = steps.filter(
+    (step) => step.status === AgentSearchStepStatus.DONE,
+  ).length;
+  const currentIndex = steps.findIndex(
+    (step) => step.status === AgentSearchStepStatus.CURRENT,
+  );
+  const activeIndex = currentIndex === -1 ? Math.max(doneCount - 1, 0) : currentIndex;
+  const progress = steps.length ? Math.round((doneCount / steps.length) * 100) : 0;
+  const currentStep = steps[activeIndex]?.step ?? "Synthesizing findings";
+  const sourceCount = steps.reduce(
+    (total, step) => total + (step.results?.length ?? 0),
+    0,
+  );
 
   return (
-    <motion.div
+    <motion.section
+      layout
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-md border bg-card/40 overflow-hidden mb-4"
+      className="mb-3 overflow-hidden rounded-md border bg-card/70 shadow-sm"
+      aria-label="Research progress"
     >
-      {/* Compact header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/20">
-        <div className="w-8 h-8 rounded-md bg-tint/10 flex items-center justify-center flex-shrink-0">
-          <WandSparklesIcon className="h-4 w-4 text-tint" />
+      <div className="border-b bg-muted/20 px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-tint/10 text-tint">
+            {isStreamingProSearch ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold leading-tight">
+                Research in progress
+              </p>
+              {isStreamingProSearch && (
+                <span className="h-1.5 w-1.5 rounded-full bg-tint animate-pulse" />
+              )}
+            </div>
+            <p className="truncate text-xs text-muted-foreground">
+              {currentStep}
+            </p>
+          </div>
+          <div className="hidden flex-shrink-0 items-center gap-1.5 rounded bg-background px-2 py-1 text-[11px] text-muted-foreground sm:flex">
+            <BookOpen className="h-3 w-3 text-tint" />
+            {sourceCount} sources
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-medium leading-tight">Research plan</p>
-          <p className="text-xs text-muted-foreground">
-            Planning, searching, reading, synthesizing
-          </p>
-        </div>
-        <div className="ml-auto rounded bg-background px-2 py-1 text-xs text-muted-foreground">
-          {steps.length} step{steps.length !== 1 ? "s" : ""}
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+          <motion.div
+            className="h-full rounded-full bg-tint"
+            initial={false}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          />
         </div>
       </div>
 
-      <div className="p-4 space-y-1">
-        <Timeline className="w-full">
-          {steps.map(({ step, queries, results, status }, index) => {
-            const isLast = index === steps.length - 1;
-            const stepStatus = status ?? AgentSearchStepStatus.DEFAULT;
-            return (
-              <TimelineItem key={index} status="default">
-                <TimelineDot className="mt-0.5">
-                  {getIcon(stepStatus)}
-                </TimelineDot>
-                {!isLast && (
-                  <TimelineLine done={stepStatus === AgentSearchStepStatus.DONE} />
-                )}
-                <TimelineContent className="w-full pb-3">
-                  <Accordion
-                    type="multiple"
-                    className="w-full"
-                    value={openSteps}
-                    onValueChange={setOpenSteps}
-                  >
-                    <AccordionItem
-                      value={index.toString()}
-                      className={cn(
-                        isLast ? "border-b-0" : "",
-                        "px-3 py-2 rounded-md hover:bg-muted/30 transition-colors",
-                      )}
-                      disabled={
-                        stepStatus !== AgentSearchStepStatus.DONE &&
-                        stepStatus !== AgentSearchStepStatus.CURRENT
-                      }
-                    >
-                      <AccordionTrigger className="w-full text-left hover:no-underline py-1">
-                        <span className="text-xs font-medium text-foreground/80">
-                          {step}
-                        </span>
-                      </AccordionTrigger>
-                      <AccordionContent className="w-full px-1 pt-1">
-                        <StepSection
-                          step={step}
-                          queries={queries || []}
-                          results={results || []}
-                        />
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </TimelineContent>
-              </TimelineItem>
-            );
-          })}
-        </Timeline>
+      <div className="max-h-[260px] space-y-1.5 overflow-y-auto p-2">
+        {steps.map((step, index) => (
+          <StepRow
+            key={`${step.step_number}-${step.step}`}
+            step={step}
+            index={index}
+            active={index === activeIndex}
+          />
+        ))}
       </div>
-    </motion.div>
+    </motion.section>
   );
 };

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { SearchResult } from "../../generated";
-import { ExternalLink, BookOpen, ShieldCheck } from "lucide-react";
+import { ExternalLink, BookOpen, Loader2, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Logo = ({ url, size = 16 }: { url: string; size?: number }) => (
@@ -27,9 +27,10 @@ function formatHostname(url: string) {
 
 interface SourcesSidebarProps {
   results: SearchResult[];
+  isLive?: boolean;
 }
 
-export function SourcesSidebar({ results }: SourcesSidebarProps) {
+export function SourcesSidebar({ results, isLive = false }: SourcesSidebarProps) {
   if (!results || results.length === 0) return null;
 
   return (
@@ -43,6 +44,12 @@ export function SourcesSidebar({ results }: SourcesSidebarProps) {
           <span className="text-xs text-muted-foreground font-mono">
             {results.length}
           </span>
+          {isLive && (
+            <span className="ml-auto inline-flex items-center gap-1 rounded bg-tint/10 px-1.5 py-0.5 text-[10px] font-medium text-tint">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Live
+            </span>
+          )}
         </div>
         <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <ShieldCheck size={12} className="text-emerald-500" />

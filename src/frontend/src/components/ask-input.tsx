@@ -94,7 +94,7 @@ export const AskInput = ({
       <div
         className={cn(
           "w-full flex flex-col bg-card border transition-all duration-200",
-          isFollowingUp ? "items-center rounded-md shadow-sm" : "rounded-md shadow-sm",
+          "rounded-md shadow-sm",
           !isRecording && "focus-within:ring-2 focus-within:ring-tint/30",
         )}
       >
@@ -144,7 +144,7 @@ export const AskInput = ({
           {/* Textarea */}
           <TextareaAutosize
             className={cn(
-              "w-full bg-transparent resize-none focus:outline-none text-foreground placeholder:text-muted-foreground",
+              "min-w-0 flex-1 bg-transparent resize-none focus:outline-none text-foreground placeholder:text-muted-foreground",
               isFollowingUp
                 ? "text-sm py-1.5 max-h-28"
                 : "text-base py-2 max-h-48",

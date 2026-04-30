@@ -7,14 +7,14 @@ import { useEffect, useRef, useState } from "react";
 import { AskInput } from "./ask-input";
 
 import { useChatThread } from "@/hooks/threads";
-import { LoaderIcon } from "lucide-react";
+import { BookOpen, LoaderIcon } from "lucide-react";
 import type { SearchResult } from "../../generated";
 import { MessageRole as MR } from "../../generated";
 import MessagesList from "./messages-list";
 import { StarterQuestionsList } from "./starter-questions";
 import { SourcesSidebar } from "./sources-sidebar";
 import { createPortal } from "react-dom";
-import { PanelRightOpen, X } from "lucide-react";
+import { X } from "lucide-react";
 
 const useAutoScroll = (ref: React.RefObject<HTMLDivElement>) => {
   const { messages } = useChatStore();
@@ -76,7 +76,10 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
   const messageBottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const latestSources = useLatestSources();
+  const savedSources = useLatestSources();
+  const latestSources = streamingMessage?.sources?.length
+    ? streamingMessage.sources
+    : savedSources;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -158,7 +161,7 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
   // ─── Main conversation view ────────────────────────────────────────────
   return (
     <>
-      <div ref={messagesRef} className="pt-6 pb-36 w-full relative">
+      <div ref={messagesRef} className="conversation-active pt-6 pb-36 w-full relative">
         <MessagesList
           messages={messages}
           streamingMessage={streamingMessage}
@@ -195,7 +198,16 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
           onClick={() => setSidebarOpen((v) => !v)}
           aria-label={sidebarOpen ? "Hide sources" : "Show sources"}
         >
-          {sidebarOpen ? <X size={14} /> : <PanelRightOpen size={14} />}
+          {sidebarOpen ? (
+            <X size={14} />
+          ) : (
+            <>
+              <BookOpen size={14} />
+              <span className="writing-mode-vertical hidden text-[11px] font-medium sm:inline">
+                Sources
+              </span>
+            </>
+          )}
         </button>
       )}
 
@@ -210,7 +222,7 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
             className="fixed right-0 top-16 bottom-0 w-80 bg-background border-l z-40 p-4 overflow-y-auto shadow-2xl hidden max-[1100px]:block"
             style={{ animation: "slide-in-right 0.2s ease-out" }}
           >
-            <SourcesSidebar results={latestSources} />
+            <SourcesSidebar results={latestSources} isLive={isResearching} />
           </div>
         </>
       )}
@@ -218,7 +230,7 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
       {/* Desktop sidebar via portal */}
       {showSidebar && mounted && (
         createPortal(
-          <SourcesSidebar results={latestSources} />,
+          <SourcesSidebar results={latestSources} isLive={isResearching} />,
           document.getElementById(sidebarPortalId) ?? document.body,
         )
       )}
