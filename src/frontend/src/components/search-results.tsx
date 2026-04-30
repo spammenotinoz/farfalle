@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export const SearchResultsSkeleton = () => (
   <div className="grid grid-cols-2 gap-2">
     {[...Array(4)].map((_, i) => (
-      <Skeleton key={i} className="rounded-xl h-24 bg-card" />
+      <Skeleton key={i} className="rounded-md h-24 bg-card" />
     ))}
   </div>
 );
@@ -71,7 +71,7 @@ export function SearchResults({ results }: { results: SearchResult[] }) {
               exit={{ opacity: 0, scale: 0.97 }}
               transition={{ delay: i * 0.04, duration: 0.2 }}
             >
-              <Card className="h-full rounded-xl border border-border hover:border-tint/40 hover:shadow-sm transition-all duration-200 overflow-hidden bg-card">
+              <Card className="h-full rounded-md border border-border hover:border-tint/40 hover:shadow-sm transition-all duration-200 overflow-hidden bg-card">
                 <CardContent className="p-3 flex flex-col gap-1.5">
                   <div className="flex items-start gap-2">
                     <Logo url={url} size={14} />

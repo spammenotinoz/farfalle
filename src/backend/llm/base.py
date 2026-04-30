@@ -2,6 +2,7 @@ import json
 import os
 import re
 from abc import ABC, abstractmethod
+from typing import Any
 from typing import AsyncIterator
 
 import httpx
@@ -86,11 +87,12 @@ class OpenAILLM(BaseLLM):
         url = f"{self.base_url}/chat/completions"
         headers = {"Authorization": f"Bearer {self.api_key}"}
 
-        fields = []
-        for name, field_info in response_model.model_fields.items():
-            fields.append('"' + name + '": "<value>"')
-        schema_str = '{"' + response_model.__name__ + '": {' + ', '.join(fields) + '}}'
-        instruction = "\n\nIMPORTANT: Respond ONLY with valid JSON matching this exact schema:\n" + schema_str + "\nDo not include any text outside the JSON."
+        schema = response_model.model_json_schema()
+        instruction = (
+            "\n\nIMPORTANT: Respond ONLY with valid JSON matching this JSON Schema:\n"
+            + json.dumps(schema, indent=2)
+            + "\nDo not include markdown fences or text outside the JSON."
+        )
         full_prompt = prompt + instruction
 
         data = {
@@ -121,7 +123,9 @@ class OpenAILLM(BaseLLM):
                 json_str = json_str[first_brace:]
 
         try:
-            return response_model.model_validate_json(json_str)
+            parsed = json.loads(json_str)
+            parsed = self._unwrap_schema_name(parsed, response_model)
+            return response_model.model_validate(parsed)
         except Exception:
             defaults = {}
             for name, field_info in response_model.model_fields.items():
@@ -130,6 +134,15 @@ class OpenAILLM(BaseLLM):
                 elif field_info.default_factory is not None:
                     defaults[name] = field_info.default_factory()
             return response_model.model_construct(**defaults)
+
+    def _unwrap_schema_name(
+        self, parsed: dict[str, Any], response_model: type[BaseModel]
+    ) -> dict[str, Any]:
+        if response_model.__name__ in parsed and isinstance(
+            parsed[response_model.__name__], dict
+        ):
+            return parsed[response_model.__name__]
+        return parsed
 
     async def close(self):
         await self.client.aclose()

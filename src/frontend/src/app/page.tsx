@@ -7,7 +7,7 @@ export default function Home() {
     <div className="app-container">
       <Navbar />
       <main className="app-main pt-16">
-        <div className="content-column flex flex-col flex-1 min-h-0">
+        <div className="content-column research-home-column flex flex-col flex-1 min-h-0">
           <Suspense>
             <ChatPanel />
           </Suspense>

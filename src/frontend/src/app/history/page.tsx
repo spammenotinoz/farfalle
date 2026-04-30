@@ -4,7 +4,7 @@ import { ErrorMessage } from "@/components/assistant-message";
 import RecentChat from "@/components/recent-chat";
 import { Separator } from "@/components/ui/separator";
 import { useChatHistory } from "@/hooks/history";
-import { HistoryIcon, Search, Clock, Trash2 } from "lucide-react";
+import { HistoryIcon, Search } from "lucide-react";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -44,7 +44,7 @@ export default function RecentsPage() {
       <div className="mx-auto max-w-3xl pt-20 px-4 pb-16">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-tint/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-md bg-tint/10 flex items-center justify-center">
               <HistoryIcon className="w-5 h-5 text-tint" />
             </div>
             <div>

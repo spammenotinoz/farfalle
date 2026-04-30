@@ -1,4 +1,4 @@
-import React, { FC, memo, useMemo } from "react";
+import React, { FC, memo } from "react";
 import { MemoizedReactMarkdown } from "./markdown";
 import { SearchResult } from "../../generated";
 import { cn } from "@/lib/utils";
@@ -9,11 +9,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ExternalLink, Lightbulb, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { ExternalLink } from "lucide-react";
+import type { Components } from "react-markdown";
 
-// ─── Citation Badge ──────────────────────────────────────────────────────
 interface CitationBadgeProps {
   number: number;
   url: string;
@@ -22,7 +20,7 @@ interface CitationBadgeProps {
 
 const CitationBadge = memo(({ number, url, title }: CitationBadgeProps) => {
   const badge = (
-    <span className="citation-badge inline-flex h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded px-1 text-xs font-mono bg-tint/10 text-tint align-super mx-0.5">
+    <span className="citation-badge inline-flex h-[1.05rem] min-w-[1.05rem] items-center justify-center rounded px-1 text-xs font-mono bg-tint/10 text-tint align-super mx-0.5">
       {number}
     </span>
   );
@@ -43,7 +41,7 @@ const CitationBadge = memo(({ number, url, title }: CitationBadgeProps) => {
         </a>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-xs p-0 overflow-hidden z-50">
-        <div className="bg-card border rounded-lg overflow-hidden shadow-xl">
+        <div className="bg-card border rounded-md overflow-hidden shadow-xl">
           <div className="p-2.5 border-b bg-muted/40">
             <div className="flex items-center gap-2 mb-1">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -53,10 +51,7 @@ const CitationBadge = memo(({ number, url, title }: CitationBadgeProps) => {
                 alt=""
               />
               <span className="text-[11px] text-muted-foreground truncate max-w-[180px]">
-                {(() => {
-                  try { return new URL(url).hostname.replace("www.", ""); }
-                  catch { return url; }
-                })()}
+                {formatHostname(url)}
               </span>
             </div>
             <p className="text-xs font-medium leading-snug">{title ?? url}</p>
@@ -73,98 +68,118 @@ const CitationBadge = memo(({ number, url, title }: CitationBadgeProps) => {
 
 CitationBadge.displayName = "CitationBadge";
 
-// ─── Streaming Cursor ─────────────────────────────────────────────────────
 const StreamingCursor = memo(() => (
   <span className="streaming-cursor" aria-hidden="true" />
 ));
 StreamingCursor.displayName = "StreamingCursor";
 
-// ─── Key Takeaways Box ──────────────────────────────────────────────────
-const KeyTakeawaysBox = memo(({ content }: { content: string }) => {
-  // Extract bullet points after "### Key Takeaways"
-  const lines = content.split("\n").filter(l => l.startsWith("- ") || l.startsWith("* "));
-  if (lines.length === 0) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="key-takeaways-box"
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <Lightbulb size={15} className="text-tint flex-shrink-0" />
-        <span className="text-sm font-semibold text-foreground">Key Takeaways</span>
-      </div>
-      <ul className="space-y-2">
-        {lines.map((line, i) => (
-          <li key={i} className="text-sm leading-relaxed text-foreground/85 flex gap-2">
-            <span className="text-tint font-medium mt-0.5 flex-shrink-0">•</span>
-            <span>{line.replace(/^[-*]\s/, "").trim()}</span>
-          </li>
-        ))}
-      </ul>
-    </motion.div>
-  );
-});
-KeyTakeawaysBox.displayName = "KeyTakeawaysBox";
-
-// ─── Collapsible Section ────────────────────────────────────────────────
-const CollapsibleSection = ({
-  title,
-  icon: Icon,
-  children,
-  defaultOpen = false,
-}: {
-  title: string;
-  icon: React.ComponentType<{ size?: number }>;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}) => {
-  const [open, setOpen] = useState(defaultOpen);
-
-  return (
-    <div className="research-section">
-      <button
-        className="research-section-header"
-        onClick={() => setOpen(v => !v)}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-tint/70"><Icon size={14} /></span>
-          <span className="text-sm font-medium text-foreground/80">{title}</span>
-        </div>
-        {open ? <span className="text-muted-foreground"><ChevronUp size={14} /></span> : <span className="text-muted-foreground"><ChevronDown size={14} /></span>}
-      </button>
-      {open && <div className="research-section-body">{children}</div>}
-    </div>
-  );
-};
-
-// ─── Custom Markdown Components ─────────────────────────────────────────
-interface MarkdownComponentsProps {
-  isStreaming?: boolean;
-  citationBadges: React.ReactNode[];
+function formatHostname(url: string) {
+  try {
+    return new URL(url).hostname.replace("www.", "");
+  } catch {
+    return url;
+  }
 }
 
-const markdownComponents = {
+function replaceCitationText(
+  text: string,
+  sources: SearchResult[] | null | undefined,
+): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const regex = /\[(\d+)\]/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    const number = Number(match[1]);
+    const source = sources?.[number - 1];
+    parts.push(
+      <CitationBadge
+        key={`citation-${number}-${match.index}`}
+        number={number}
+        url={source?.url ?? ""}
+        title={source?.title}
+      />,
+    );
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts;
+}
+
+function renderCitations(
+  node: React.ReactNode,
+  sources: SearchResult[] | null | undefined,
+): React.ReactNode {
+  if (typeof node === "string") {
+    return replaceCitationText(node, sources);
+  }
+
+  if (Array.isArray(node)) {
+    return node.map((child, index) => (
+      <React.Fragment key={index}>
+        {renderCitations(child, sources)}
+      </React.Fragment>
+    ));
+  }
+
+  if (React.isValidElement(node)) {
+    const props = node.props as { children?: React.ReactNode };
+    return React.cloneElement(
+      node,
+      {},
+      renderCitations(props.children, sources),
+    );
+  }
+
+  return node;
+}
+
+const createMarkdownComponents = (
+  sources: SearchResult[] | null | undefined,
+): Components => ({
   // eslint-disable-next-line @next/next/no-img-element
   img: ({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => (
     <img
       src={src}
       alt={alt ?? ""}
-      className="max-w-full rounded-lg my-4"
+      className="max-w-full rounded-md my-4"
       {...props}
     />
   ),
   table: ({ children, ...props }: React.TableHTMLAttributes<HTMLTableElement>) => (
-    <div className="overflow-x-auto my-4">
-      <table className="w-full text-sm border-collapse" {...props}>{children}</table>
+    <div className="overflow-x-auto my-4 rounded-md border">
+      <table className="w-full min-w-[620px] text-sm border-collapse" {...props}>
+        {children}
+      </table>
     </div>
   ),
   th: ({ children, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
-    <th className="text-left px-3 py-2 border-b bg-muted/50 font-semibold text-foreground/80" {...props}>{children}</th>
+    <th
+      className="text-left px-3 py-2 border-b bg-muted/50 font-semibold text-foreground/80"
+      {...props}
+    >
+      {children}
+    </th>
   ),
   td: ({ children, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
-    <td className="px-3 py-2 border-b border-border/40 text-foreground/80" {...props}>{children}</td>
+    <td className="px-3 py-2 border-b border-border/40 text-foreground/80 align-top" {...props}>
+      {renderCitations(children, sources)}
+    </td>
+  ),
+  p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
+    <p {...props}>{renderCitations(children, sources)}</p>
+  ),
+  li: ({ children, ...props }: React.LiHTMLAttributes<HTMLLIElement>) => (
+    <li {...props}>{renderCitations(children, sources)}</li>
   ),
   a: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a
@@ -177,9 +192,8 @@ const markdownComponents = {
       {children}
     </a>
   ),
-};
+});
 
-// ─── Answer Body (parsed markdown with section detection) ────────────────
 interface AnswerBodyProps {
   content: string;
   sources: SearchResult[] | null | undefined;
@@ -187,76 +201,34 @@ interface AnswerBodyProps {
 }
 
 const AnswerBody = memo(({ content, sources, isStreaming }: AnswerBodyProps) => {
-  // Strip [N] citations for markdown rendering
-  const markdownContent = content.replace(/\[(\d+)\]/g, "").trim();
-
-  // Parse citation badges
-  const citationBadges = useMemo(() => {
-    const regex = /\[(\d+)\]/g;
-    const badges: React.ReactNode[] = [];
-    let match;
-    while ((match = regex.exec(content)) !== null) {
-      const num = parseInt(match[1], 10);
-      const source = sources?.[num - 1];
-      badges.push(
-        <CitationBadge
-          key={`badge-${num}-${match.index}`}
-          number={num}
-          url={source?.url ?? ""}
-          title={source?.title}
-        />
-      );
-    }
-    return badges;
-  }, [content, sources]);
-
-  // Detect Key Takeaways section
-  const hasKeyTakeaways = /[#\s]*key\s*takeaways/i.test(markdownContent);
-
-  // Split content at Key Takeaways for special rendering
-  const splitContent = markdownContent.split(/(?=#\s*Key\s*Takeaways)/i);
+  const markdownContent = content.trim();
+  const markdownComponents = createMarkdownComponents(sources);
 
   return (
-    <div className="space-y-4">
-      {splitContent.map((section, i) => {
-        if (i === 0) {
-          // First section: render as markdown, but strip Key Takeaways heading
-          const cleaned = section.replace(/^#+\s*Key\s*Takeaways.*?\n*/im, "").trim();
-          if (!cleaned) return null;
-          return (
-            <div key="main" className="prose-answer">
-              <MemoizedReactMarkdown components={markdownComponents}>
-                {cleaned}
-              </MemoizedReactMarkdown>
-            </div>
-          );
-        }
-        // Key Takeaways section: extract bullets and render as box
-        return <KeyTakeawaysBox key="takeaways" content={section} />;
-      })}
-
-      {citationBadges.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1 pt-2 border-t border-border/30">
-          <span className="text-[10px] text-muted-foreground mr-1">Sources:</span>
-          {citationBadges}
-        </div>
-      )}
-
-      {isStreaming && <StreamingCursor />}
-    </div>
+    <TooltipProvider>
+      <div className="prose-answer">
+        <MemoizedReactMarkdown components={markdownComponents}>
+          {markdownContent}
+        </MemoizedReactMarkdown>
+        {isStreaming && <StreamingCursor />}
+      </div>
+    </TooltipProvider>
   );
 });
 
 AnswerBody.displayName = "AnswerBody";
 
-// ─── Main Message Component ──────────────────────────────────────────────
 export const MessageComponent: FC<{
   message: { content: string; sources?: SearchResult[] | null };
   isStreaming?: boolean;
 }> = ({ message, isStreaming = false }) => {
   return (
     <div className={cn(isStreaming && "relative")}>
-      <AnswerBody content={message.content} sources={message.sources} isStreaming={isStreaming} />
+      <AnswerBody
+        content={message.content}
+        sources={message.sources}
+        isStreaming={isStreaming}
+      />
     </div>
   );
 };

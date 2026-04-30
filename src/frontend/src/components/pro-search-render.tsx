@@ -3,8 +3,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   AgentSearchFullResponse,
   AgentSearchStepStatus,
-  ChatMessage,
-  MessageRole,
   SearchResult,
 } from "../../generated";
 import {
@@ -46,10 +44,10 @@ const StepSection = ({
         {queries.map((q, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-1 bg-muted/60 text-muted-foreground px-2 py-0.5 rounded-full text-xs"
+            className="inline-flex max-w-full items-center gap-1 rounded bg-muted/70 px-2 py-1 text-xs text-muted-foreground"
           >
             <SearchIcon className="h-3 w-3 flex-shrink-0" />
-            {q}
+            <span className="truncate">{q}</span>
           </span>
         ))}
       </div>
@@ -63,7 +61,7 @@ const StepSection = ({
             href={r.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-full text-xs hover:bg-muted transition-colors"
+            className="inline-flex max-w-full items-center gap-1 rounded bg-muted/50 px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted"
           >
             <Logo url={r.url} size={10} />
             {(() => {
@@ -86,9 +84,9 @@ const StepSection = ({
 );
 
 const ProSearchSkeleton = () => (
-  <div className="w-full rounded-xl border bg-card/40 p-4 space-y-4">
+  <div className="w-full rounded-md border bg-card/40 p-4 space-y-4">
     <div className="flex items-center gap-3">
-      <div className="w-9 h-9 rounded-lg bg-tint/10 flex items-center justify-center">
+      <div className="w-9 h-9 rounded-md bg-tint/10 flex items-center justify-center">
         <WandSparklesIcon className="h-4 w-4 text-tint" />
       </div>
       <div>
@@ -156,18 +154,21 @@ export const ProSearchRender = ({
     <motion.div
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border bg-card/40 overflow-hidden mb-4"
+      className="rounded-md border bg-card/40 overflow-hidden mb-4"
     >
       {/* Compact header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/20">
-        <div className="w-8 h-8 rounded-lg bg-tint/10 flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 rounded-md bg-tint/10 flex items-center justify-center flex-shrink-0">
           <WandSparklesIcon className="h-4 w-4 text-tint" />
         </div>
         <div>
-          <p className="text-sm font-medium leading-tight">Expert Search</p>
+          <p className="text-sm font-medium leading-tight">Research plan</p>
           <p className="text-xs text-muted-foreground">
-            {steps.length} step{steps.length !== 1 ? "s" : ""}
+            Planning, searching, reading, synthesizing
           </p>
+        </div>
+        <div className="ml-auto rounded bg-background px-2 py-1 text-xs text-muted-foreground">
+          {steps.length} step{steps.length !== 1 ? "s" : ""}
         </div>
       </div>
 
@@ -195,7 +196,7 @@ export const ProSearchRender = ({
                       value={index.toString()}
                       className={cn(
                         isLast ? "border-b-0" : "",
-                        "px-3 py-2 rounded-lg hover:bg-muted/30 transition-colors",
+                        "px-3 py-2 rounded-md hover:bg-muted/30 transition-colors",
                       )}
                       disabled={
                         stepStatus !== AgentSearchStepStatus.DONE &&

@@ -12,7 +12,7 @@ export const ImageSectionSkeleton = () => {
     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
       {[...Array(6)].map((_, index) => (
         <div key={`image-skeleton-${index}`} className="aspect-square">
-          <Skeleton className="w-full h-full rounded-lg bg-card" />
+          <Skeleton className="w-full h-full rounded-md bg-card" />
         </div>
       ))}
     </div>
@@ -29,7 +29,7 @@ export function ImageSection({ images }: { images: string[] }) {
           <h3 className="text-sm font-medium text-muted-foreground">
             {images.length} images
           </h3>
-          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-muted rounded-md p-1">
             <Button
               variant={viewMode === "grid" ? "secondary" : "ghost"}
               size="icon"
@@ -68,7 +68,7 @@ export function ImageSection({ images }: { images: string[] }) {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: index * 0.05 }}
                 className={cn(
-                  "relative overflow-hidden group bg-muted rounded-lg transition-all duration-200",
+                  "relative overflow-hidden group bg-muted rounded-md transition-all duration-200",
                   viewMode === "grid"
                     ? "aspect-square"
                     : "aspect-video"

@@ -25,7 +25,7 @@
     --accent: 220 14% 96%;
     --accent-foreground: 220 13% 10%;
 
-    --tint: 220 65% 50%;
+    --tint: 188 72% 34%;
     --tint-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -33,7 +33,7 @@
 
     --border: 220 13% 90%;
     --input: 220 13% 90%;
-    --ring: 220 65% 50%;
+    --ring: 188 72% 34%;
 
     --radius: 0.75rem;
   }
@@ -60,7 +60,7 @@
     --accent: 220 12% 14%;
     --accent-foreground: 0 0% 98%;
 
-    --tint: 220 70% 62%;
+    --tint: 178 70% 45%;
     --tint-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
@@ -68,7 +68,7 @@
 
     --border: 220 12% 18%;
     --input: 220 12% 18%;
-    --ring: 220 70% 62%;
+    --ring: 178 70% 45%;
   }
 }
 
@@ -82,12 +82,8 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Subtle dot-grid background texture */
   html {
     scroll-behavior: smooth;
-    background-image: radial-gradient(hsl(var(--border)) 1px, transparent 1px);
-    background-size: 24px 24px;
-    background-attachment: fixed;
   }
 }
 
@@ -148,6 +144,36 @@
   padding-left: 1rem;
   padding-right: 1rem;
   flex: 1;
+}
+
+#sources-sidebar,
+#sources-sidebar-search {
+  position: fixed;
+  top: 4rem;
+  right: 0;
+  width: 320px;
+  height: calc(100vh - 4rem);
+  overflow-y: auto;
+  border-left: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  padding: 1rem;
+}
+
+@media (min-width: 1100px) {
+  .content-column:not(.research-home-column) {
+    margin-right: 340px;
+  }
+}
+
+@media (max-width: 1099px) {
+  #sources-sidebar,
+  #sources-sidebar-search {
+    display: none;
+  }
+}
+
+.research-home-column {
+  max-width: 1080px;
 }
 
 @media (min-width: 640px) {
@@ -213,9 +239,9 @@
    ═══════════════════════════════════════════════════════════════════ */
 .prose-answer {
   font-size: 0.9375rem;
-  line-height: 1.85;
+  line-height: 1.75;
   color: hsl(var(--foreground));
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .prose-answer p {
@@ -257,10 +283,10 @@
 .prose-answer h2,
 .prose-answer h3 {
   font-weight: 700;
-  margin-top: 2em;
+  margin-top: 1.6em;
   margin-bottom: 0.5em;
   line-height: 1.25;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   color: hsl(var(--foreground));
 }
 
@@ -294,11 +320,20 @@
   font-size: 0.8125em;
 }
 
+.prose-answer table {
+  border-spacing: 0;
+}
+
+.prose-answer th,
+.prose-answer td {
+  vertical-align: top;
+}
+
 /* ─── Answer Card ──────────────────────────────────────────────────── */
 .answer-card {
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
+  border-radius: 0.5rem;
   box-shadow:
     0 1px 2px hsl(var(--foreground) / 0.03),
     0 4px 12px hsl(var(--foreground) / 0.04);
@@ -309,14 +344,14 @@
 .key-takeaways-box {
   background: hsl(var(--muted));
   border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
+  border-radius: 0.5rem;
   padding: 1rem 1.25rem;
   margin: 0.75rem 0;
 }
 
 .research-section {
   border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
+  border-radius: 0.5rem;
   overflow: hidden;
   margin: 0.75rem 0;
 }
@@ -348,7 +383,7 @@
 /* ─── Sources sidebar ─────────────────────────────────────────────── */
 .source-card {
   border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
+  border-radius: 0.5rem;
   padding: 0.875rem;
   margin-bottom: 0.625rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;

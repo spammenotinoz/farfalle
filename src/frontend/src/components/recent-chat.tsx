@@ -4,7 +4,7 @@ import moment from "moment";
 import Link from "next/link";
 import { modelMap } from "./model-selection";
 import { motion } from "framer-motion";
-import { MessageSquare, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export default function RecentChat({
   id,
@@ -21,7 +21,7 @@ export default function RecentChat({
     <motion.div whileHover={{ scale: 1.01 }} transition={{ duration: 0.2 }}>
       <Link
         href={`/search/${id}`}
-        className="flex-1 rounded-xl flex-col cursor-pointer transition-all duration-200 group bg-card hover:bg-card/80 border border-border/50 hover:border-tint/30 no-underline block"
+        className="flex-1 rounded-md flex-col cursor-pointer transition-all duration-200 group bg-card hover:bg-card/80 border border-border/50 hover:border-tint/30 no-underline block"
       >
         <div className="p-4 flex flex-col justify-between h-full space-y-3">
           <div className="flex flex-col">

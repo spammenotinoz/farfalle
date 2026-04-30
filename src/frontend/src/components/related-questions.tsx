@@ -23,9 +23,9 @@ export default function RelatedQuestions({
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
             onClick={() => onSelect(question)}
-            className="group flex items-center justify-between p-3 rounded-xl bg-card/50 hover:bg-card border border-border/50 hover:border-tint/30 transition-all duration-200 text-left"
+            className="group flex items-center justify-between rounded-md border border-border/50 bg-card/50 p-3 text-left transition-all duration-200 hover:border-tint/30 hover:bg-card"
           >
-            <span className="text-sm font-medium group-hover:text-tint transition-colors line-clamp-1">
+            <span className="line-clamp-2 text-sm font-medium transition-colors group-hover:text-tint">
               {question}
             </span>
             <ArrowRight

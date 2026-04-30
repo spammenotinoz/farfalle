@@ -2,7 +2,6 @@ import { useMutation } from "@tanstack/react-query";
 import {
   AgentQueryPlanStream,
   AgentReadResultsStream,
-  AgentSearchFullResponse,
   AgentSearchQueriesStream,
   AgentSearchStep,
   AgentSearchStepStatus,
@@ -13,13 +12,11 @@ import {
   Message,
   MessageRole,
   RelatedQueriesStream,
-  SearchResult,
   SearchResultStream,
   StreamEndStream,
   StreamEvent,
   TextChunkStream,
 } from "../../generated";
-import Error from "next/error";
 import {
   fetchEventSource,
   FetchEventSourceInit,
@@ -27,9 +24,10 @@ import {
 import { useState } from "react";
 import { useConfigStore, useChatStore } from "@/stores";
 import { env } from "../env.mjs";
-import { useRouter } from "next/navigation";
 
 const BASE_URL = env.NEXT_PUBLIC_API_URL;
+
+let stepsDetails: AgentSearchStep[] = [];
 
 const streamChat = async ({
   request,
@@ -47,7 +45,7 @@ const streamChat = async ({
     openWhenHidden: true,
     body: JSON.stringify({ ...request }),
     onmessage: onMessage,
-    onerror: (error) => {},
+    onerror: () => {},
   });
 };
 
@@ -64,15 +62,13 @@ const convertToChatRequest = (query: string, history: ChatMessage[]) => {
 
 export const useChat = () => {
   const { addMessage, messages, threadId, setThreadId } = useChatStore();
-  const { model, proMode } = useConfigStore();
+  const { model, proMode, researchDepth } = useConfigStore();
 
   const [streamingMessage, setStreamingMessage] = useState<ChatMessage | null>(
     null,
   );
   const [isStreamingProSearch, setIsStreamingProSearch] = useState(false);
   const [isStreamingMessage, setIsStreamingMessage] = useState(false);
-
-  let steps_details: AgentSearchStep[] = [];
 
   const handleEvent = (eventItem: ChatResponseEvent, state: ChatMessage) => {
     switch (eventItem.event) {
@@ -99,12 +95,12 @@ export const useChat = () => {
           break;
         }
         // Hide the pro search once we start streaming
-        steps_details = steps_details.map((step) => ({
+        stepsDetails = stepsDetails.map((step) => ({
           ...step,
           status: AgentSearchStepStatus.DONE,
         }));
         state.agent_response = {
-          steps_details: steps_details,
+          steps_details: stepsDetails,
         };
 
         break;
@@ -127,7 +123,7 @@ export const useChat = () => {
         return;
       case StreamEvent.AGENT_QUERY_PLAN:
         const { steps } = eventItem.data as AgentQueryPlanStream;
-        steps_details =
+        stepsDetails =
           steps?.map((step, index) => ({
             step: step,
             queries: [],
@@ -136,28 +132,39 @@ export const useChat = () => {
             step_number: index,
           })) ?? [];
 
-        steps_details[0].status = AgentSearchStepStatus.CURRENT;
+        if (stepsDetails[0]) {
+          stepsDetails[0].status = AgentSearchStepStatus.CURRENT;
+        }
         state.agent_response = {
-          steps_details: steps_details,
+          steps_details: stepsDetails,
         };
         break;
       case StreamEvent.AGENT_SEARCH_QUERIES:
         const { queries, step_number: queryStepNumber } =
           eventItem.data as AgentSearchQueriesStream;
-        steps_details[queryStepNumber].queries = queries;
-        steps_details[queryStepNumber].status = AgentSearchStepStatus.CURRENT;
-        if (queryStepNumber !== 0) {
-          steps_details[queryStepNumber - 1].status =
+        const queryStepIndex = stepsDetails.findIndex(
+          (step) => step.step_number === queryStepNumber,
+        );
+        if (queryStepIndex === -1) break;
+        stepsDetails[queryStepIndex].queries = queries;
+        stepsDetails[queryStepIndex].status = AgentSearchStepStatus.CURRENT;
+        if (queryStepIndex !== 0) {
+          stepsDetails[queryStepIndex - 1].status =
             AgentSearchStepStatus.DONE;
         }
         state.agent_response = {
-          steps_details: steps_details,
+          steps_details: stepsDetails,
         };
         break;
       case StreamEvent.AGENT_READ_RESULTS:
         const { results, step_number: resultsStepNumber } =
           eventItem.data as AgentReadResultsStream;
-        steps_details[resultsStepNumber].results = results;
+        const resultsStepIndex = stepsDetails.findIndex(
+          (step) => step.step_number === resultsStepNumber,
+        );
+        if (resultsStepIndex !== -1) {
+          stepsDetails[resultsStepIndex].results = results;
+        }
 
         break;
       case StreamEvent.AGENT_FINISH:
@@ -187,8 +194,8 @@ export const useChat = () => {
       agent_response:
         state.agent_response !== null
           ? {
-              steps: steps_details.map((step) => step.step),
-              steps_details: steps_details,
+              steps: stepsDetails.map((step) => step.step),
+              steps_details: stepsDetails,
             }
           : null,
     });
@@ -206,14 +213,16 @@ export const useChat = () => {
         agent_response: null,
       };
       addMessage({ role: MessageRole.USER, content: request.query });
-      setIsStreamingProSearch(proMode);
+      stepsDetails = [];
 
-      const req = {
+      const req: ChatRequest = {
         ...request,
         thread_id: threadId,
         model,
         pro_search: proMode,
+        research_depth: researchDepth,
       };
+      setIsStreamingProSearch(req.pro_search ?? false);
       await streamChat({
         request: req,
         onMessage: (event) => {

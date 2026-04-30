@@ -4,7 +4,7 @@ import { SearchResults } from "./search-results";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ImageSection } from "./image-section";
 import { ChatMessage } from "../../generated";
-import { Copy, Share2, Download, MoreHorizontal } from "lucide-react";
+import { Copy, Share2, Download, MoreHorizontal, FileText } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -20,7 +20,7 @@ import { BookOpen } from "lucide-react";
 const InlineSources = ({ sources }: { sources: ChatMessage["sources"] }) => {
   if (!sources?.length) return null;
   return (
-    <details className="group border rounded-xl overflow-hidden mt-5">
+    <details className="group border rounded-md overflow-hidden mt-5">
       <summary className="flex items-center gap-2 px-4 py-3 cursor-pointer select-none text-sm text-muted-foreground hover:text-foreground transition-colors">
         <BookOpen size={14} className="text-tint flex-shrink-0" />
         <span className="font-medium">Sources</span>
@@ -39,7 +39,7 @@ const InlineSources = ({ sources }: { sources: ChatMessage["sources"] }) => {
 // ─── Error Message ───────────────────────────────────────────────────────
 export function ErrorMessage({ content }: { content: string }) {
   return (
-    <Alert className="bg-destructive/5 border-destructive/15 p-5 rounded-xl">
+    <Alert className="bg-destructive/5 border-destructive/15 p-5 rounded-md">
       <AlertDescription className="text-sm text-foreground leading-relaxed">
         {content.split(" ").map((word, index) => {
           const urlPattern = /(https?:\/\/[^\s]+)/g;
@@ -86,7 +86,7 @@ const ContentActions = ({ content }: { content: string }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground flex-shrink-0 rounded-lg">
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground flex-shrink-0 rounded-md">
           <MoreHorizontal size={16} />
         </Button>
       </DropdownMenuTrigger>
@@ -146,21 +146,22 @@ export const AssistantMessageContent = ({
       className="research-answer"
     >
       {/* Answer card */}
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <FileText size={15} className="text-tint" />
+          Research report
+        </div>
+        {!isStreaming && content && <ContentActions content={content} />}
+      </div>
+
       <div className="answer-card mb-4">
         {/* Meta bar */}
         <AnswerMetaBar sources={sources} />
 
         {/* Answer content */}
         {content ? (
-          <div className="flex items-start gap-2">
-            <div className="flex-1 min-w-0">
-              <MessageComponent message={message} isStreaming={isStreaming} />
-            </div>
-            {!isStreaming && (
-              <div className="flex-shrink-0 pt-0.5">
-                <ContentActions content={content} />
-              </div>
-            )}
+          <div className="min-w-0">
+            <MessageComponent message={message} isStreaming={isStreaming} />
           </div>
         ) : (
           <MessageComponentSkeleton />

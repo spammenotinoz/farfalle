@@ -76,6 +76,7 @@ export type ChatRequest = {
   history?: Array<Message>;
   model?: ChatModel;
   pro_search?: boolean;
+  research_depth?: ResearchDepth;
 };
 
 export type ChatResponseEvent = {
@@ -131,6 +132,12 @@ export type RelatedQueriesStream = {
   event_type?: StreamEvent;
   related_queries?: Array<string>;
 };
+
+export enum ResearchDepth {
+  QUICK = "quick",
+  BALANCED = "balanced",
+  DEEP = "deep",
+}
 
 export type SearchResult = {
   title: string;

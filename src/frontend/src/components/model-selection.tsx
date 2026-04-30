@@ -9,20 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  BrainIcon,
-  RabbitIcon,
-  Zap,
-  Cpu,
-  Terminal,
-} from "lucide-react";
-import { useConfigStore, useChatStore } from "@/stores";
+import { Cpu, Terminal, Zap } from "lucide-react";
+import { useConfigStore } from "@/stores";
 import { ChatModel } from "../../generated";
-import { isCloudModel, isLocalModel } from "@/lib/utils";
+import { isCloudModel } from "@/lib/utils";
 
 import _ from "lodash";
-import { env } from "@/env.mjs";
-import { motion } from "framer-motion";
 
 type Model = {
   name: string;
@@ -36,15 +28,15 @@ type Model = {
 export const modelMap: Record<ChatModel, Model> = {
   [ChatModel.FAST]: {
     name: "Fast",
-    description: "",
+    description: "Low-latency scans",
     value: ChatModel.FAST,
     smallIcon: <Zap className="w-4 h-4" />,
     icon: <Zap className="w-5 h-5" />,
     color: "text-cyan-500",
   },
   [ChatModel.THINKING]: {
-    name: "Thinking",
-    description: "",
+    name: "Research",
+    description: "Best for synthesis",
     value: ChatModel.THINKING,
     smallIcon: <Cpu className="w-4 h-4" />,
     icon: <Cpu className="w-5 h-5" />,
@@ -52,7 +44,7 @@ export const modelMap: Record<ChatModel, Model> = {
   },
   [ChatModel.TECHNICAL]: {
     name: "Technical",
-    description: "",
+    description: "Code and systems",
     value: ChatModel.TECHNICAL,
     smallIcon: <Terminal className="w-4 h-4" />,
     icon: <Terminal className="w-5 h-5" />,
@@ -72,7 +64,7 @@ const ModelItem: React.FC<{ model: Model }> = ({ model }) => (
     className="flex flex-col items-start p-3"
   >
     <div className="flex items-center space-x-3 w-full">
-      <div className={`p-2 rounded-lg bg-muted ${model.color}`}>
+      <div className={`p-2 rounded-md bg-muted ${model.color}`}>
         {model.icon}
       </div>
       <div className="flex flex-col">
@@ -97,7 +89,7 @@ export function ModelSelection() {
         }
       }}
     >
-      <SelectTrigger className="w-fit space-x-2 bg-transparent outline-none border-none select-none focus:ring-0 shadow-none transition-all duration-200 ease-in-out text-sm h-8 px-2 hover:bg-muted/50 rounded-md">
+      <SelectTrigger className="w-fit min-w-0 space-x-2 bg-transparent outline-none border-none select-none focus:ring-0 shadow-none transition-all duration-200 ease-in-out text-sm h-8 px-2 hover:bg-muted/50 rounded-md">
         <SelectValue>
           <div className="flex items-center space-x-2">
             <div className={`${selectedModel.color}`}>
@@ -109,7 +101,7 @@ export function ModelSelection() {
       </SelectTrigger>
       <SelectContent className="w-[280px]">
         <SelectGroup className="w-full">
-          <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <div className="px-3 py-2 text-xs font-medium uppercase text-muted-foreground">
             Available Models
           </div>
           {Object.values(cloudModelMap).map((model) => (

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { SearchResult } from "../../generated";
-import { ExternalLink, BookOpen } from "lucide-react";
+import { ExternalLink, BookOpen, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Logo = ({ url, size = 16 }: { url: string; size?: number }) => (
@@ -34,7 +34,7 @@ export function SourcesSidebar({ results }: SourcesSidebarProps) {
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between mb-4 px-1">
+      <div className="mb-4 px-1">
         <div className="flex items-center gap-2">
           <BookOpen size={14} className="text-tint" />
           <h2 className="text-sm font-semibold text-foreground">
@@ -43,6 +43,10 @@ export function SourcesSidebar({ results }: SourcesSidebarProps) {
           <span className="text-xs text-muted-foreground font-mono">
             {results.length}
           </span>
+        </div>
+        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <ShieldCheck size={12} className="text-emerald-500" />
+          Inline citation numbers map to this list.
         </div>
       </div>
 

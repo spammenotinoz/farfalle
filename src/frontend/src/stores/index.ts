@@ -17,6 +17,7 @@ const useStore = create<StoreState>()(
         model: state.model,
         localMode: state.localMode,
         proMode: state.proMode,
+        researchDepth: state.researchDepth,
       }),
     },
   ),
@@ -43,4 +44,6 @@ export const useConfigStore = () =>
     setModel: state.setModel,
     proMode: state.proMode,
     toggleProMode: state.toggleProMode,
+    researchDepth: state.researchDepth,
+    setResearchDepth: state.setResearchDepth,
   }));

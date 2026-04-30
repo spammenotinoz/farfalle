@@ -1,8 +1,23 @@
 "use client";
 
-import { ArrowUpRight, Sparkles, TrendingUp, Globe, Lightbulb, RefreshCw, LucideIcon } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useTrendingTopics, groupTopicsByCategory, TrendingTopic } from "@/services/trending";
+import {
+  ArrowUpRight,
+  BriefcaseBusiness,
+  FlaskConical,
+  Globe,
+  Landmark,
+  Lightbulb,
+  LucideIcon,
+  RefreshCw,
+  SearchCheck,
+  TrendingUp,
+} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  groupTopicsByCategory,
+  TrendingTopic,
+  useTrendingTopics,
+} from "@/services/trending";
 import { Button } from "./ui/button";
 import { useState } from "react";
 
@@ -14,11 +29,20 @@ interface Category {
 
 const categories: Category[] = [
   { name: "Technology", icon: TrendingUp, color: "text-blue-500" },
-  { name: "Science", icon: Lightbulb, color: "text-green-500" },
-  { name: "Business", icon: Globe, color: "text-purple-500" },
+  { name: "Science", icon: FlaskConical, color: "text-green-500" },
+  { name: "Business", icon: BriefcaseBusiness, color: "text-violet-500" },
   { name: "World", icon: Globe, color: "text-orange-500" },
-  { name: "Entertainment", icon: Sparkles, color: "text-pink-500" },
-  { name: "Sports", icon: TrendingUp, color: "text-red-500" },
+  { name: "Policy", icon: Landmark, color: "text-amber-500" },
+  { name: "Strategy", icon: Lightbulb, color: "text-rose-500" },
+];
+
+const researchPrompts = [
+  "Compare the current AI search market: Perplexity, ChatGPT Search, Gemini, and You.com",
+  "What are the strongest arguments for and against small modular nuclear reactors?",
+  "Deep dive into the economics and supply chain risks of sodium-ion batteries",
+  "Analyze the latest evidence on GLP-1 drugs and long-term cardiovascular outcomes",
+  "What should a mid-market company know before moving from PostgreSQL to distributed SQL?",
+  "Research the state of autonomous coding agents and where they still fail",
 ];
 
 const TopicCard = ({
@@ -39,21 +63,21 @@ const TopicCard = ({
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.03 }}
       onClick={() => onSelect(topic.title)}
-      className="group flex items-center justify-between p-3 rounded-xl bg-card/50 hover:bg-card border border-border/50 hover:border-tint/30 transition-all duration-200 text-left w-full"
+      className="group flex w-full items-center justify-between rounded-md border border-border/50 bg-card/70 p-3 text-left transition-all duration-200 hover:border-tint/30 hover:bg-card"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         {category && (
-          <div className={`p-2 rounded-lg bg-muted ${category.color}`}>
+          <div className={`rounded-md bg-muted p-2 ${category.color}`}>
             <category.icon size={14} />
           </div>
         )}
-        <span className="text-sm font-medium group-hover:text-tint transition-colors line-clamp-1 flex-1">
+        <span className="line-clamp-2 flex-1 text-sm font-medium leading-snug transition-colors group-hover:text-tint">
           {topic.title}
         </span>
       </div>
       <ArrowUpRight
         size={14}
-        className="opacity-0 group-hover:opacity-100 transition-all duration-200 transform group-hover:translate-x-1 text-tint ml-2"
+        className="ml-2 shrink-0 text-tint opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100"
       />
     </motion.button>
   );
@@ -80,7 +104,7 @@ const CategorySection = ({
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        {topics.map((topic, index) => (
+        {topics.slice(0, 4).map((topic, index) => (
           <TopicCard
             key={topic.id}
             topic={topic}
@@ -93,20 +117,20 @@ const CategorySection = ({
   );
 };
 
-const LoadingSkeleton = () => (
-  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {[...Array(6)].map((_, i) => (
-      <div key={i} className="space-y-3">
-        <div className="flex items-center gap-2 text-sm">
-          <div className="w-4 h-4 bg-muted rounded animate-pulse" />
-          <div className="w-16 h-4 bg-muted rounded animate-pulse" />
-        </div>
-        <div className="space-y-2">
-          {[...Array(2)].map((_, j) => (
-            <div key={j} className="h-10 bg-muted/50 rounded-xl animate-pulse" />
-          ))}
-        </div>
-      </div>
+const PromptGrid = ({ handleSend }: { handleSend: (question: string) => void }) => (
+  <div className="grid gap-2 sm:grid-cols-2">
+    {researchPrompts.map((prompt) => (
+      <button
+        key={prompt}
+        onClick={() => handleSend(prompt)}
+        className="group flex w-full items-center justify-between rounded-md border bg-card/70 p-3 text-left transition-colors hover:border-tint/40"
+      >
+        <span className="text-sm font-medium leading-snug">{prompt}</span>
+        <ArrowUpRight
+          size={14}
+          className="ml-3 shrink-0 text-tint opacity-70 transition-transform group-hover:translate-x-0.5"
+        />
+      </button>
     ))}
   </div>
 );
@@ -126,18 +150,18 @@ export const StarterQuestionsList = ({
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <TrendingUp size={14} />
-          <span>Trending topics</span>
+          <SearchCheck size={14} />
+          <span>Research starting points</span>
           {error && (
-            <span className="text-xs text-destructive">(failed to load)</span>
+            <span className="text-xs text-destructive">(live topics unavailable)</span>
           )}
         </div>
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs gap-1"
+          className="h-7 gap-1 text-xs"
           onClick={() => refetch()}
           disabled={loading}
         >
@@ -146,14 +170,14 @@ export const StarterQuestionsList = ({
         </Button>
       </div>
 
-      {loading ? (
-        <LoadingSkeleton />
-      ) : (
-        <div className="space-y-6">
-          {/* Category filter buttons */}
-          {!selectedCategory && Object.keys(groupedTopics).length > 1 && (
-            <div className="flex flex-wrap gap-2">
-              {Object.keys(groupedTopics).slice(0, 4).map((category) => {
+      <div className="space-y-6">
+        <PromptGrid handleSend={handleSend} />
+
+        {!selectedCategory && Object.keys(groupedTopics).length > 1 && (
+          <div className="flex flex-wrap gap-2">
+            {Object.keys(groupedTopics)
+              .slice(0, 4)
+              .map((category) => {
                 const categoryConfig = categories.find((c) => c.name === category);
                 const Icon = categoryConfig?.icon || TrendingUp;
                 const colorClass = categoryConfig?.color || "text-tint";
@@ -162,54 +186,42 @@ export const StarterQuestionsList = ({
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 hover:bg-muted text-xs font-medium transition-colors"
+                    className="flex items-center gap-1.5 rounded-md bg-muted/50 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
                   >
                     <Icon size={12} className={colorClass} />
                     {category}
                   </button>
                 );
               })}
-            </div>
-          )}
+          </div>
+        )}
 
-          {/* Selected category back button */}
-          {selectedCategory && (
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className="text-xs text-muted-foreground hover:text-tint transition-colors flex items-center gap-1 mb-2"
+        {selectedCategory && (
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className="mb-2 flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-tint"
+          >
+            Back to all categories
+          </button>
+        )}
+
+        <AnimatePresence mode="wait">
+          {Object.entries(displayedCategories).map(([category, categoryTopics]) => (
+            <motion.div
+              key={category}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
             >
-              ← Back to all categories
-            </button>
-          )}
-
-          {/* Topic sections */}
-          <AnimatePresence mode="wait">
-            {Object.entries(displayedCategories).map(([category, categoryTopics]) => (
-              <motion.div
-                key={category}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <CategorySection
-                  category={category}
-                  topics={categoryTopics}
-                  onSelect={handleSend}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {/* Empty state */}
-          {topics.length === 0 && !loading && (
-            <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground">
-                No trending topics available. Try again later.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+              <CategorySection
+                category={category}
+                topics={categoryTopics}
+                onSelect={handleSend}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

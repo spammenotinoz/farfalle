@@ -8,13 +8,13 @@ import { AskInput } from "./ask-input";
 
 import { useChatThread } from "@/hooks/threads";
 import { LoaderIcon } from "lucide-react";
-import type { MessageRole, SearchResult } from "../../generated";
+import type { SearchResult } from "../../generated";
 import { MessageRole as MR } from "../../generated";
 import MessagesList from "./messages-list";
 import { StarterQuestionsList } from "./starter-questions";
 import { SourcesSidebar } from "./sources-sidebar";
 import { createPortal } from "react-dom";
-import { PanelRightOpen, X } from "lucide-react";
+import { PanelRightOpen, SearchCheck, X } from "lucide-react";
 
 const useAutoScroll = (ref: React.RefObject<HTMLDivElement>) => {
   const { messages } = useChatStore();
@@ -107,24 +107,26 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
   // ─── Empty state: homepage ─────────────────────────────────────────────
   if (messages.length === 0 && !threadId) {
     return (
-      <div className="flex flex-col items-center w-full py-24 sm:py-32 px-4">
-        {/* Headline */}
-        <div className="text-center mb-10 animate-fade-in">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-tight mb-3">
-            Ask anything
+      <div className="flex w-full flex-col px-4 py-16 sm:py-20">
+        <div className="mb-8 animate-fade-in">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-md border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            <SearchCheck size={14} className="text-tint" />
+            SearXNG or Brave search with OpenAI-compatible models
+          </div>
+          <h1 className="max-w-3xl text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
+            Deep research, with sources you can inspect.
           </h1>
-          <p className="text-base text-muted-foreground">
-            Search the web, get answers powered by live sources
+          <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
+            Ask a question and get a structured brief with an evidence matrix,
+            source tension, research gaps, and citations tied back to live web results.
           </p>
         </div>
 
-        {/* Search bar */}
-        <div className="w-full max-w-2xl mb-14 animate-slide-up" style={{ animationDelay: "80ms" }}>
+        <div className="mb-10 w-full max-w-3xl animate-slide-up" style={{ animationDelay: "80ms" }}>
           <AskInput sendMessage={handleSend} />
         </div>
 
-        {/* Topics */}
-        <div className="w-full max-w-2xl animate-slide-up" style={{ animationDelay: "160ms" }}>
+        <div className="w-full max-w-4xl animate-slide-up" style={{ animationDelay: "160ms" }}>
           <StarterQuestionsList handleSend={handleSend} />
         </div>
       </div>
@@ -154,7 +156,7 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
   // ─── Main conversation view ────────────────────────────────────────────
   return (
     <>
-      <div ref={messagesRef} className="pt-6 pb-44 w-full relative">
+      <div ref={messagesRef} className="pt-6 pb-36 w-full relative">
         <MessagesList
           messages={messages}
           streamingMessage={streamingMessage}

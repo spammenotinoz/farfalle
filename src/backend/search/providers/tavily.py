@@ -11,10 +11,10 @@ class TavilySearchProvider(SearchProvider):
         self.host = "https://api.tavily.com"
         self.api_key = api_key
 
-    async def search(self, query: str) -> SearchResponse:
+    async def search(self, query: str, max_results: int = 8) -> SearchResponse:
         async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
             link_results, image_results = await asyncio.gather(
-                self.get_link_results(client, query),
+                self.get_link_results(client, query, num_results=max_results),
                 self.get_image_results(client, query),
             )
 

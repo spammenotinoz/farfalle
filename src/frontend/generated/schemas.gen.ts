@@ -328,6 +328,14 @@ export const $ChatRequest = {
       title: "Pro Search",
       default: false,
     },
+    research_depth: {
+      allOf: [
+        {
+          $ref: "#/components/schemas/ResearchDepth",
+        },
+      ],
+      default: "deep",
+    },
   },
   type: "object",
   required: ["query"],
@@ -510,6 +518,12 @@ export const $RelatedQueriesStream = {
   },
   type: "object",
   title: "RelatedQueriesStream",
+} as const;
+
+export const $ResearchDepth = {
+  type: "string",
+  enum: ["quick", "balanced", "deep"],
+  title: "ResearchDepth",
 } as const;
 
 export const $SearchResult = {

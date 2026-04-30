@@ -2,15 +2,13 @@
 
 import Link from "next/link";
 import { ModeToggle } from "./mode-toggle";
-import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, SearchCheck } from "lucide-react";
 import { useChatStore, chatStore } from "@/stores";
 import { useRouter } from "next/navigation";
 
 export function Navbar() {
   const router = useRouter();
-  const { theme } = useTheme();
   const { messages } = useChatStore();
   const hasMessages = messages.length > 0;
 
@@ -29,21 +27,18 @@ export function Navbar() {
         href="/"
         className="flex items-center gap-2.5 flex-shrink-0"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={theme === "light" ? "/logo-black.png" : "/logo-white.png"}
-          alt="Logo"
-          className="w-8 h-8 rounded-lg"
-        />
-        <span className="text-base font-semibold hidden sm:block tracking-tight text-foreground">
-          Ultimate Search
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground text-background">
+          <SearchCheck size={17} />
+        </div>
+        <span className="text-base font-semibold hidden sm:block text-foreground">
+          Deep Research
         </span>
       </Link>
 
       {/* Centered nav links — Perplexity style */}
       <nav className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-6">
         {[
-          { href: "/", label: "Home" },
+          { href: "/", label: "Research" },
           { href: "/search/history", label: "Library" },
         ].map(({ href, label }) => (
           <Link

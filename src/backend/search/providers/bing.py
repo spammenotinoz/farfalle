@@ -14,9 +14,9 @@ class BingSearchProvider(SearchProvider):
             "Content-Type": "application/json",
         }
 
-    async def search(self, query: str) -> SearchResponse:
+    async def search(self, query: str, max_results: int = 8) -> SearchResponse:
         async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
-            link_results = await self.get_link_results(client, query)
+            link_results = await self.get_link_results(client, query, num_results=max_results)
             image_results = await self.get_image_results(client, query)
 
         return SearchResponse(results=link_results, images=image_results)

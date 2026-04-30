@@ -14,7 +14,7 @@ class SerperSearchProvider(SearchProvider):
             "Content-Type": "application/json",
         }
 
-    async def search(self, query: str) -> SearchResponse:
+    async def search(self, query: str, max_results: int = 8) -> SearchResponse:
         async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
             link_results = await self.get_link_results(client, query)
             image_results = await self.get_image_results(client, query)
@@ -27,7 +27,7 @@ class SerperSearchProvider(SearchProvider):
         response = await client.get(
             f"{self.host}/search",
             headers=self.headers,
-            params={"q": query},
+            params={"q": query, "num": num_results},
         )
         results = response.json()
 

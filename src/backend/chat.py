@@ -17,6 +17,7 @@ from backend.schemas import (
     FinalResponseStream,
     Message,
     RelatedQueriesStream,
+    ResearchDepth,
     SearchResult,
     SearchResultStream,
     StreamEndStream,
@@ -48,7 +49,7 @@ async def rephrase_query_with_history(
 
 def format_context(search_results: List[SearchResult]) -> str:
     return "\n\n".join(
-        [f"Citation {i+1}. {str(result)}" for i, result in enumerate(search_results)]
+        [f"Source [{i+1}]. {str(result)}" for i, result in enumerate(search_results)]
     )
 
 
@@ -58,11 +59,36 @@ def format_context_with_pages(
     """Combine search result snippets with full page content."""
     result_context = format_context(search_results)
     if pages_context:
-        return (
-            f"## Search Result Summaries\n{result_context}\n\n"
-            f"## Full Page Content (fetched from top sources)\n{pages_context}"
-        )
+        return f"## Search Result Summaries\n{result_context}\n\n{pages_context}"
     return result_context
+
+
+DEPTH_CONFIG = {
+    ResearchDepth.QUICK: {
+        "search_results": 6,
+        "pages": 2,
+        "page_chars": 3000,
+        "instruction": "Produce a concise but well-cited research brief. Prioritize the direct answer and key evidence.",
+    },
+    ResearchDepth.BALANCED: {
+        "search_results": 10,
+        "pages": 5,
+        "page_chars": 5000,
+        "instruction": "Produce a balanced research report with synthesis, source comparison, and explicit uncertainty.",
+    },
+    ResearchDepth.DEEP: {
+        "search_results": 14,
+        "pages": 8,
+        "page_chars": 7000,
+        "instruction": "Produce a deep research report with rigorous synthesis, evidence grading, contradictions, and next-step questions.",
+    },
+}
+
+
+def get_depth_config(depth: ResearchDepth | None) -> dict:
+    return DEPTH_CONFIG.get(
+        depth or ResearchDepth.DEEP, DEPTH_CONFIG[ResearchDepth.DEEP]
+    )
 
 
 async def stream_qa_objects(
@@ -79,7 +105,11 @@ async def stream_qa_objects(
 
         query = await rephrase_query_with_history(request.query, request.history, llm)
 
-        search_response = await perform_search(query)
+        depth_config = get_depth_config(request.research_depth)
+
+        search_response = await perform_search(
+            query, max_results=depth_config["search_results"]
+        )
 
         search_results = search_response.results
         images = search_response.images
@@ -93,9 +123,16 @@ async def stream_qa_objects(
         )
 
         # Fetch full content from top source pages for richer context
-        source_urls = [r.url for r in search_results[:4]]
-        pages = await read_pages(source_urls, max_pages=4, concurrency=3)
-        pages_context = format_pages_for_context(pages)
+        source_urls = [r.url for r in search_results[: depth_config["pages"]]]
+        pages = await read_pages(
+            source_urls,
+            max_pages=depth_config["pages"],
+            concurrency=4,
+            max_chars=depth_config["page_chars"],
+        )
+        pages_context = format_pages_for_context(
+            pages, max_chars=depth_config["page_chars"]
+        )
 
         # Start related queries generation in parallel (no need to await before streaming)
         related_queries_task = None
@@ -109,6 +146,8 @@ async def stream_qa_objects(
         fmt_qa_prompt = SYSTEM_PROMPT_STANDARD.format(
             my_context=context,
             my_query=query,
+            research_depth=(request.research_depth or ResearchDepth.DEEP).value,
+            research_instruction=depth_config["instruction"],
         )
 
         # Stream tokens one at a time for true streaming UX

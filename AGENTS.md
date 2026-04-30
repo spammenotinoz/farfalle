@@ -87,7 +87,8 @@ src/frontend/generated/   # Auto-generated TypeScript types from OpenAPI schema 
 
 **Backend (`.env`):**
 ```
-SEARCH_PROVIDER=searxng|tavily|serper|bing
+SEARCH_PROVIDER=searxng|brave
+BRAVE_API_KEY=
 OPENAI_API_KEY=
 OPENAI_API_BASE=
 GROQ_API_KEY=

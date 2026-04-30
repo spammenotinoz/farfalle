@@ -1,6 +1,6 @@
 "use client";
 
-import { CloudIcon, CloudOffIcon, WandSparklesIcon } from "lucide-react";
+import { WandSparklesIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useConfigStore } from "@/stores";
@@ -13,22 +13,19 @@ import {
 } from "@/components/ui/hover-card";
 import { Separator } from "./ui/separator";
 import { env } from "@/env.mjs";
-import { memo } from "react";
-import { motion } from "framer-motion";
 
 const ProToggle = () => {
   const { proMode, toggleProMode } = useConfigStore();
 
   return (
     <HoverCard>
-      <HoverCardTrigger
-        asChild
-        className={cn(
-          "hover:cursor-pointer",
-          !env.NEXT_PUBLIC_LOCAL_MODE_ENABLED && "hover:cursor-not-allowed",
-        )}
-      >
-        <div className="group flex space-x-2 items-center justify-end pr-3 hover:text-primary transition-colors">
+      <HoverCardTrigger asChild>
+        <div
+          className={cn(
+            "group flex items-center justify-end gap-2 rounded-md px-2 py-1.5 hover:bg-muted/60 hover:text-primary transition-colors",
+            !env.NEXT_PUBLIC_PRO_MODE_ENABLED && "opacity-50 hover:cursor-not-allowed",
+          )}
+        >
           <div className="flex items-center gap-2">
             <WandSparklesIcon
               size={14}
@@ -43,7 +40,7 @@ const ProToggle = () => {
                 proMode ? "text-tint" : "text-muted-foreground group-hover:text-foreground"
               )}
             >
-              {proMode ? "Expert" : "Standard"}
+              {proMode ? "Agent" : "Direct"}
             </span>
           </div>
           <Switch
@@ -57,19 +54,18 @@ const ProToggle = () => {
       <HoverCardContent className="w-80 p-0" side="top">
         <div className="flex flex-col items-start rounded-md p-4">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-tint/10 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-md bg-tint/10 flex items-center justify-center">
               <WandSparklesIcon className="w-4 h-4 text-tint" />
             </div>
             <div className="text-base font-medium">
-              <span className="text-tint">Expert</span>{" "}
-              <span>Mode</span>
+              <span className="text-tint">Research Agent</span>
             </div>
           </div>
           <Separator className="mb-3" />
           <div className="text-sm gap-y-2 flex flex-col text-muted-foreground">
             <div>
-              Expert mode uses an AI agent to plan and execute multi-step searches
-              for more thorough and accurate answers.
+              Agent mode plans multiple searches, fuses results, reads source pages,
+              and then synthesizes a deeper report.
             </div>
             <div className="text-xs text-muted-foreground/70 pt-1">
               Recommended for complex research questions.

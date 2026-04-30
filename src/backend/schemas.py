@@ -27,12 +27,19 @@ class Message(BaseModel):
 LOCAL_MODELS_ENABLED = strtobool(os.getenv("ENABLE_LOCAL_MODELS", False))
 
 
+class ResearchDepth(str, Enum):
+    QUICK = "quick"
+    BALANCED = "balanced"
+    DEEP = "deep"
+
+
 class ChatRequest(BaseModel):
     thread_id: int | None = None
     query: str
     history: List[Message] = Field(default_factory=list)
     model: ChatModel = ChatModel.FAST
     pro_search: bool = False
+    research_depth: ResearchDepth = ResearchDepth.DEEP
 
 
 class RelatedQueries(BaseModel):

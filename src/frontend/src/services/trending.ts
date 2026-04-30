@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export interface TrendingTopic {
   id: string;
@@ -10,119 +10,82 @@ export interface TrendingTopic {
 
 const HACKER_NEWS_API = "https://hacker-news.firebaseio.com/v0";
 
-// Generate contextual trending topics based on time and categories
 const getContextualTopics = (): TrendingTopic[] => {
-  const now = new Date();
-  const hour = now.getHours();
-  const dayOfWeek = now.getDay();
-
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-  const isMorning = hour >= 6 && hour < 12;
-  const isEvening = hour >= 17 && hour < 21;
-
-  // Time-based greetings for dynamic content
-  const timeGreeting = isMorning
-    ? "Good morning! Here's what's trending"
-    : isEvening
-    ? "Good evening! Catch up on the latest"
-    : "Here's what's happening today";
-
-  // Categories with contextual queries
   const categories = [
     {
       name: "Technology",
-      icon: "💻",
       queries: [
-        "latest AI developments 2025",
-        "new programming languages",
-        "tech industry layoffs news",
-        "Apple vs Samsung news",
-        "cybersecurity threats 2025",
+        "latest AI infrastructure market analysis",
+        "cybersecurity regulation trends",
+        "semiconductor supply chain risks",
+        "open source AI model licensing comparison",
       ],
     },
     {
       name: "Science",
-      icon: "🔬",
       queries: [
-        "space exploration discoveries",
-        "climate change research 2025",
-        "medical breakthroughs",
-        "physics discoveries",
-        "renewable energy advances",
+        "recent climate attribution research findings",
+        "fusion energy private investment progress",
+        "medical AI clinical validation evidence",
+        "space launch market economics",
       ],
     },
     {
       name: "Business",
-      icon: "📈",
       queries: [
-        "stock market today",
-        "crypto market analysis",
-        "startup funding news",
-        "economic forecasts 2025",
-        "company earnings reports",
+        "private credit market systemic risk analysis",
+        "enterprise software spending trends",
+        "AI chip demand forecast evidence",
+        "renewable energy project finance constraints",
       ],
     },
     {
       name: "World",
-      icon: "🌍",
       queries: [
-        "latest world news today",
-        "political elections 2025",
-        "international relations",
-        "global conflicts resolution",
-        "UN summit decisions",
+        "global rare earths supply chain geopolitics",
+        "election misinformation policy comparison",
+        "shipping route disruption economic impact",
+        "food security climate risk analysis",
       ],
     },
     {
-      name: "Entertainment",
-      icon: "🎬",
+      name: "Policy",
       queries: [
-        "new movies releasing",
-        "celebrity news today",
-        "music chart top songs",
-        "video game releases 2025",
-        "streaming platform updates",
+        "AI regulation comparison United States European Union",
+        "carbon border adjustment mechanism impact",
+        "privacy law enforcement trends",
+        "public procurement AI governance research",
       ],
     },
     {
-      name: "Sports",
-      icon: "⚽",
+      name: "Strategy",
       queries: [
-        "sports scores today",
-        "Olympic 2024 results",
-        "FIFA World Cup qualifiers",
-        "NBA championship news",
-        "tennis Grand Slam updates",
+        "build vs buy AI agents enterprise strategy",
+        "data center power procurement strategy",
+        "vendor lock-in risks cloud AI platforms",
+        "go-to-market lessons from vertical SaaS companies",
       ],
     },
   ];
 
-  // Build topics from categories
-  const topics: TrendingTopic[] = [];
-
-  categories.forEach((category, catIndex) => {
-    category.queries.forEach((query, queryIndex) => {
-      topics.push({
-        id: `topic-${catIndex}-${queryIndex}`,
-        title: query,
-        url: `https://news.google.com/search?q=${encodeURIComponent(query)}`,
-        source: category.name,
-        category: category.name,
-      });
-    });
-  });
-
-  return topics;
+  return categories.flatMap((category, categoryIndex) =>
+    category.queries.map((query, queryIndex) => ({
+      id: `topic-${categoryIndex}-${queryIndex}`,
+      title: query,
+      url: `https://news.google.com/search?q=${encodeURIComponent(query)}`,
+      source: category.name,
+      category: category.name,
+    })),
+  );
 };
 
-// Fetch live stories from Hacker News
 export const fetchHackerNewsStories = async (
   storyType: "top" | "new" | "best" = "top",
-  limit: number = 10
+  limit: number = 6,
 ): Promise<TrendingTopic[]> => {
   try {
     const response = await fetch(
-      `${HACKER_NEWS_API}/${storyType}stories.json?print=pretty`
+      `${HACKER_NEWS_API}/${storyType}stories.json?print=pretty`,
     );
     const storyIds: number[] = await response.json();
     const topStories = storyIds.slice(0, limit);
@@ -131,7 +94,7 @@ export const fetchHackerNewsStories = async (
       topStories.map(async (id) => {
         try {
           const storyResponse = await fetch(
-            `${HACKER_NEWS_API}/item/${id}.json?print=pretty`
+            `${HACKER_NEWS_API}/item/${id}.json?print=pretty`,
           );
           const story = await storyResponse.json();
 
@@ -145,7 +108,7 @@ export const fetchHackerNewsStories = async (
         } catch {
           return null;
         }
-      })
+      }),
     );
 
     return stories.filter((s): s is TrendingTopic => s !== null);
@@ -165,22 +128,15 @@ export const useTrendingTopics = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch from multiple sources
-      const [hnStories] = await Promise.all([
-        fetchHackerNewsStories("top", 6),
-      ]);
-
-      // Mix of live HN stories and contextual topics
+      const [hnStories] = await Promise.all([fetchHackerNewsStories("top", 6)]);
       const contextual = getContextualTopics();
-
-      // Shuffle and combine
       const shuffled = [...hnStories, ...contextual]
         .sort(() => Math.random() - 0.5)
-        .slice(0, 12);
+        .slice(0, 14);
 
       setTopics(shuffled);
-    } catch (err) {
-      setError("Failed to load trending topics");
+    } catch {
+      setError("Failed to load live topics");
       setTopics(getContextualTopics());
     } finally {
       setLoading(false);
@@ -194,7 +150,6 @@ export const useTrendingTopics = () => {
   return { topics, loading, error, refetch: loadTopics };
 };
 
-// Group topics by category for display
 export const groupTopicsByCategory = (topics: TrendingTopic[]) => {
   const grouped: Record<string, TrendingTopic[]> = {};
 

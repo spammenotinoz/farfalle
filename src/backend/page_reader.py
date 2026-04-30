@@ -138,18 +138,18 @@ async def read_pages(
     return [p for p in pages if p.content]  # Drop pages that failed silently
 
 
-def format_pages_for_context(pages: list[PageContent]) -> str:
+def format_pages_for_context(pages: list[PageContent], max_chars: int = 3000) -> str:
     """Format fetched pages into a context string for the LLM."""
     if not pages:
         return ""
 
     parts = []
-    for i, page in enumerate(pages, 1):
+    for page in pages:
         if page.error:
             continue
         parts.append(
-            f"--- Source {i}: {page.title or page.url} ---\n"
+            f"--- Full Page Extract: {page.title or page.url} ---\n"
             f"URL: {page.url}\n"
-            f"{page.content[:3000]}"
+            f"{page.content[:max_chars]}"
         )
     return "\n\n".join(parts)

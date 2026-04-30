@@ -5,6 +5,8 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { ArrowUp, Mic } from "lucide-react";
 import { ModelSelection } from "./model-selection";
+import ProToggle from "./pro-toggle";
+import { ResearchDepthControl } from "./research-depth";
 import {
   Tooltip,
   TooltipContent,
@@ -17,24 +19,28 @@ export const AskInput = ({
   sendMessage,
   isFollowingUp = false,
 }: {
-  sendMessage: (message: string) => void;
+  sendMessage: (message: string) => void | Promise<void>;
   isFollowingUp?: boolean;
 }) => {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
 
-  const handleSend = () => {
-    if (input.trim().length < 3) return;
-    sendMessage(input);
-    setInput("");
+  const handleSend = async () => {
+    const message = input.trim();
+    if (message.length < 3 || isStreaming) return;
+    setIsStreaming(true);
+    try {
+      await sendMessage(message);
+      setInput("");
+    } finally {
+      setIsStreaming(false);
+    }
   };
 
   const handleVoiceToggle = () => {
     if (!isRecording) {
       setIsRecording(true);
-      setRecordingTime(0);
       if (
         "webkitSpeechRecognition" in window ||
         "SpeechRecognition" in window
@@ -78,26 +84,24 @@ export const AskInput = ({
     <form
       className="w-full"
       onSubmit={(e) => {
-        if (input.trim().length < 3) return;
         e.preventDefault();
+        if (input.trim().length < 3) return;
         handleSend();
       }}
     >
       <div
         className={cn(
           "w-full flex flex-col bg-card border transition-all duration-200",
-          isFollowingUp
-            ? "rounded-full border shadow-sm items-center"
-            : "rounded-2xl border shadow-sm",
+          isFollowingUp ? "items-center rounded-md shadow-sm" : "rounded-md shadow-sm",
           !isRecording && "focus-within:ring-2 focus-within:ring-tint/30",
         )}
       >
         {/* Recording indicator */}
         {isRecording && (
-          <div className="flex items-center gap-3 px-4 py-2 border-b rounded-t-2xl bg-destructive/5">
+          <div className="flex items-center gap-3 px-4 py-2 border-b rounded-t-md bg-destructive/5">
             <div className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse flex-shrink-0" />
             <span className="text-sm font-medium text-destructive">
-              {formatTime(recordingTime)}
+              {formatTime(0)}
             </span>
             <span className="text-sm text-muted-foreground">Listening...</span>
           </div>
@@ -106,7 +110,7 @@ export const AskInput = ({
         <div
           className={cn(
             "flex items-end gap-2",
-            isFollowingUp ? "p-1.5 px-2" : "p-2.5",
+            isFollowingUp ? "p-1.5 px-2" : "p-3",
           )}
         >
           {/* Voice button */}
@@ -155,7 +159,7 @@ export const AskInput = ({
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                if (input.trim().length >= 3) handleSend();
+                if (input.trim().length >= 3 && !isStreaming) handleSend();
               }
             }}
           />
@@ -170,11 +174,10 @@ export const AskInput = ({
                     variant="default"
                     size="icon"
                     className={cn(
-                      "rounded-full bg-foreground text-background hover:bg-foreground/80 transition-all duration-200",
+                      "rounded-md bg-foreground text-background hover:bg-foreground/80 transition-all duration-200",
                       isFollowingUp ? "h-8 w-8" : "h-9 w-9",
                     )}
                     disabled={input.trim().length < 3 || isStreaming}
-                    onClick={handleSend}
                   >
                     <ArrowUp size={isFollowingUp ? 16 : 18} strokeWidth={2.5} />
                   </Button>
@@ -187,8 +190,12 @@ export const AskInput = ({
 
         {/* Bottom bar: model selector (homepage only) */}
         {!isFollowingUp && (
-          <div className="flex items-center justify-between px-3 pb-2.5 pt-0">
-            <ModelSelection />
+          <div className="flex flex-col gap-2 border-t px-3 pb-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-2">
+              <ModelSelection />
+              <ProToggle />
+            </div>
+            <ResearchDepthControl />
           </div>
         )}
       </div>

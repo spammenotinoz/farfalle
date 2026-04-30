@@ -3,7 +3,6 @@ import { Separator } from "@/components/ui/separator";
 import { UserMessageContent } from "./user-message";
 import { memo } from "react";
 import {
-  AgentSearchFullResponse,
   ChatMessage,
   MessageRole,
 } from "../../generated";
