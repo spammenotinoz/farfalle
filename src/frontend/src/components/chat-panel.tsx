@@ -14,7 +14,7 @@ import MessagesList from "./messages-list";
 import { StarterQuestionsList } from "./starter-questions";
 import { SourcesSidebar } from "./sources-sidebar";
 import { createPortal } from "react-dom";
-import { PanelRightOpen, SearchCheck, X } from "lucide-react";
+import { PanelRightOpen, X } from "lucide-react";
 
 const useAutoScroll = (ref: React.RefObject<HTMLDivElement>) => {
   const { messages } = useChatStore();
@@ -109,10 +109,6 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
     return (
       <div className="flex w-full flex-col px-4 py-16 sm:py-20">
         <div className="mb-8 animate-fade-in">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-md border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            <SearchCheck size={14} className="text-tint" />
-            SearXNG or Brave search with OpenAI-compatible models
-          </div>
           <h1 className="max-w-3xl text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
             Deep research, with sources you can inspect.
           </h1>

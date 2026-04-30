@@ -37,7 +37,6 @@ const categories: Category[] = [
 ];
 
 const researchPrompts = [
-  "Compare the current AI search market: Perplexity, ChatGPT Search, Gemini, and You.com",
   "What are the strongest arguments for and against small modular nuclear reactors?",
   "Deep dive into the economics and supply chain risks of sodium-ion batteries",
   "Analyze the latest evidence on GLP-1 drugs and long-term cardiovascular outcomes",

@@ -25,14 +25,25 @@ def get_searxng_base_url():
     return searxng_base_url
 
 
-def get_tavily_api_key():
-    tavily_api_key = os.getenv("TAVILY_API_KEY")
-    if not tavily_api_key:
+def _parse_api_keys(*env_names: str) -> list[str]:
+    keys: list[str] = []
+    for env_name in env_names:
+        value = os.getenv(env_name, "")
+        for key in value.replace(";", ",").replace("\n", ",").split(","):
+            cleaned = key.strip()
+            if cleaned and cleaned not in keys:
+                keys.append(cleaned)
+    return keys
+
+
+def get_tavily_api_keys():
+    tavily_api_keys = _parse_api_keys("TAVILY_API_KEYS", "TAVILY_API_KEY")
+    if not tavily_api_keys:
         raise HTTPException(
             status_code=500,
-            detail="Tavily API key is not set in the environment variables. Please set the TAVILY_API_KEY environment variable or set SEARCH_PROVIDER to 'searxng' or 'serper'.",
+            detail="Tavily API key is not set in the environment variables. Please set TAVILY_API_KEYS with comma-separated keys, set TAVILY_API_KEY, or use SEARCH_PROVIDER=searxng.",
         )
-    return tavily_api_key
+    return tavily_api_keys
 
 
 def get_serper_api_key():
@@ -55,14 +66,14 @@ def get_bing_api_key():
     return bing_api_key
 
 
-def get_brave_api_key():
-    brave_api_key = os.getenv("BRAVE_API_KEY")
-    if not brave_api_key:
+def get_brave_api_keys():
+    brave_api_keys = _parse_api_keys("BRAVE_API_KEYS", "BRAVE_API_KEY")
+    if not brave_api_keys:
         raise HTTPException(
             status_code=500,
-            detail="Brave Search API key is not set. Please set BRAVE_API_KEY or use SEARCH_PROVIDER=searxng.",
+            detail="Brave Search API key is not set. Please set BRAVE_API_KEYS with comma-separated keys, set BRAVE_API_KEY, or use SEARCH_PROVIDER=searxng.",
         )
-    return brave_api_key
+    return brave_api_keys
 
 
 def get_search_provider() -> SearchProvider:
@@ -73,11 +84,11 @@ def get_search_provider() -> SearchProvider:
             searxng_base_url = get_searxng_base_url()
             return SearxngSearchProvider(searxng_base_url)
         case "brave":
-            brave_api_key = get_brave_api_key()
-            return BraveSearchProvider(brave_api_key)
+            brave_api_keys = get_brave_api_keys()
+            return BraveSearchProvider(brave_api_keys)
         case "tavily":
-            tavily_api_key = get_tavily_api_key()
-            return TavilySearchProvider(tavily_api_key)
+            tavily_api_keys = get_tavily_api_keys()
+            return TavilySearchProvider(tavily_api_keys)
         case "serper":
             serper_api_key = get_serper_api_key()
             return SerperSearchProvider(serper_api_key)

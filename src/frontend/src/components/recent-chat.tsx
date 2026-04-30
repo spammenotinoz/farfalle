@@ -2,7 +2,7 @@ import { HourglassIcon } from "lucide-react";
 import { ChatModel, ChatSnapshot } from "../../generated";
 import moment from "moment";
 import Link from "next/link";
-import { modelMap } from "./model-selection";
+import { modelMap } from "./model-display";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 

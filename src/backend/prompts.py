@@ -178,23 +178,23 @@ Instructions:
 3. First step has no dependencies. Subsequent steps list prior step ids they build on.
 4. The last step is always synthesis/comparison/conclusion.
 
-Example Query: "Compare Perplexity and You.com in terms of revenue, number of employees, and valuation"
+Example Query: "Compare two public companies in terms of revenue, number of employees, and valuation"
 
 Example Query Plan:
 [
     {{
         "id": 0,
-        "step": "Research Perplexity's revenue, employee count, and valuation",
+        "step": "Research Company A's revenue, employee count, and valuation",
         "dependencies": []
     }},
     {{
         "id": 1,
-        "step": "Research You.com's revenue, employee count, and valuation",
+        "step": "Research Company B's revenue, employee count, and valuation",
         "dependencies": []
     }},
     {{
         "id": 2,
-        "step": "Compare revenue, employees, and valuation between Perplexity and You.com",
+        "step": "Compare revenue, employees, and valuation between Company A and Company B",
         "dependencies": [0, 1]
     }}
 ]

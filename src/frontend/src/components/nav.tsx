@@ -31,25 +31,9 @@ export function Navbar() {
           <SearchCheck size={17} />
         </div>
         <span className="text-base font-semibold hidden sm:block text-foreground">
-          Deep Research
+          Research
         </span>
       </Link>
-
-      {/* Centered nav links — Perplexity style */}
-      <nav className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-6">
-        {[
-          { href: "/", label: "Research" },
-          { href: "/search/history", label: "Library" },
-        ].map(({ href, label }) => (
-          <Link
-            key={href}
-            href={href}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
 
       {/* Right controls */}
       <div className="ml-auto flex items-center gap-2">

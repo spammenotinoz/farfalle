@@ -7,29 +7,66 @@ from backend.search.providers.base import SearchProvider
 
 
 class BraveSearchProvider(SearchProvider):
-    def __init__(self, api_key: str):
+    _next_key_index = 0
+
+    def __init__(self, api_keys: str | list[str]):
         self.host = "https://api.search.brave.com/res/v1"
-        self.headers = {
+        self.api_keys = [api_keys] if isinstance(api_keys, str) else api_keys
+
+    async def search(self, query: str, max_results: int = 8) -> SearchResponse:
+        last_error: Exception | None = None
+        for api_key in self._ordered_api_keys():
+            try:
+                return await self._search_with_key(query, max_results, api_key)
+            except (httpx.HTTPError, PermissionError, RuntimeError) as exc:
+                last_error = exc
+
+        if last_error:
+            raise RuntimeError(
+                f"Brave Search failed after trying {len(self.api_keys)} API key(s): "
+                f"{last_error}"
+            ) from last_error
+
+        raise RuntimeError("Brave Search has no API keys configured.")
+
+    async def _search_with_key(
+        self, query: str, max_results: int, api_key: str
+    ) -> SearchResponse:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
+            link_results, image_results = await asyncio.gather(
+                self.get_link_results(
+                    client, query, api_key=api_key, num_results=max_results
+                ),
+                self.get_image_results(client, query, api_key=api_key),
+            )
+
+        return SearchResponse(results=link_results, images=image_results)
+
+    def _ordered_api_keys(self) -> list[str]:
+        if len(self.api_keys) <= 1:
+            return self.api_keys
+
+        start = BraveSearchProvider._next_key_index % len(self.api_keys)
+        BraveSearchProvider._next_key_index += 1
+        return self.api_keys[start:] + self.api_keys[:start]
+
+    def _headers(self, api_key: str) -> dict[str, str]:
+        return {
             "Accept": "application/json",
             "Accept-Encoding": "gzip",
             "X-Subscription-Token": api_key,
         }
 
-    async def search(self, query: str, max_results: int = 8) -> SearchResponse:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
-            link_results, image_results = await asyncio.gather(
-                self.get_link_results(client, query, num_results=max_results),
-                self.get_image_results(client, query),
-            )
-
-        return SearchResponse(results=link_results, images=image_results)
-
     async def get_link_results(
-        self, client: httpx.AsyncClient, query: str, num_results: int = 8
+        self,
+        client: httpx.AsyncClient,
+        query: str,
+        api_key: str,
+        num_results: int = 8,
     ) -> list[SearchResult]:
         response = await client.get(
             f"{self.host}/web/search",
-            headers=self.headers,
+            headers=self._headers(api_key),
             params={
                 "q": query,
                 "count": min(num_results, 20),
@@ -40,8 +77,15 @@ class BraveSearchProvider(SearchProvider):
         )
         if response.status_code == 401:
             raise PermissionError("Brave Search API key is invalid.")
+        if response.status_code == 403:
+            raise PermissionError("Brave Search API access is forbidden.")
         if response.status_code == 429:
             raise RuntimeError("Brave Search rate limit hit. Try again later.")
+        if response.status_code >= 500:
+            raise RuntimeError(
+                f"Brave Search service error {response.status_code}: "
+                f"{response.text[:300]}"
+            )
         if response.status_code >= 400:
             raise RuntimeError(
                 f"Brave Search error {response.status_code}: {response.text[:300]}"
@@ -65,11 +109,15 @@ class BraveSearchProvider(SearchProvider):
         ]
 
     async def get_image_results(
-        self, client: httpx.AsyncClient, query: str, num_results: int = 4
+        self,
+        client: httpx.AsyncClient,
+        query: str,
+        api_key: str,
+        num_results: int = 4,
     ) -> list[str]:
         response = await client.get(
             f"{self.host}/images/search",
-            headers=self.headers,
+            headers=self._headers(api_key),
             params={"q": query, "count": num_results},
         )
         if response.status_code >= 400:

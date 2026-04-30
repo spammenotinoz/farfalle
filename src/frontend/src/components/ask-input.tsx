@@ -4,7 +4,6 @@ import TextareaAutosize from "react-textarea-autosize";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { ArrowUp, Mic } from "lucide-react";
-import { ModelSelection } from "./model-selection";
 import ProToggle from "./pro-toggle";
 import { ResearchDepthControl } from "./research-depth";
 import {
@@ -188,11 +187,10 @@ export const AskInput = ({
           </div>
         </div>
 
-        {/* Bottom bar: model selector (homepage only) */}
+        {/* Bottom bar: research controls (homepage only) */}
         {!isFollowingUp && (
           <div className="flex flex-col gap-2 border-t px-3 pb-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-2">
-              <ModelSelection />
               <ProToggle />
             </div>
             <ResearchDepthControl />

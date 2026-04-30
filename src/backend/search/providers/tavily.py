@@ -7,25 +7,62 @@ from backend.search.providers.base import SearchProvider
 
 
 class TavilySearchProvider(SearchProvider):
-    def __init__(self, api_key: str):
+    _next_key_index = 0
+
+    def __init__(self, api_keys: str | list[str]):
         self.host = "https://api.tavily.com"
-        self.api_key = api_key
+        self.api_keys = [api_keys] if isinstance(api_keys, str) else api_keys
 
     async def search(self, query: str, max_results: int = 8) -> SearchResponse:
+        last_error: Exception | None = None
+        for api_key in self._ordered_api_keys():
+            try:
+                return await self._search_with_key(query, max_results, api_key)
+            except (httpx.HTTPError, PermissionError, RuntimeError) as exc:
+                last_error = exc
+
+        if last_error:
+            raise RuntimeError(
+                f"Tavily Search failed after trying {len(self.api_keys)} API key(s): "
+                f"{last_error}"
+            ) from last_error
+
+        raise RuntimeError("Tavily Search has no API keys configured.")
+
+    async def _search_with_key(
+        self, query: str, max_results: int, api_key: str
+    ) -> SearchResponse:
         async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
             link_results, image_results = await asyncio.gather(
-                self.get_link_results(client, query, num_results=max_results),
-                self.get_image_results(client, query),
+                self.get_link_results(
+                    client, query, api_key=api_key, num_results=max_results
+                ),
+                self.get_image_results(client, query, api_key=api_key),
             )
 
         return SearchResponse(results=link_results, images=image_results)
 
+    def _ordered_api_keys(self) -> list[str]:
+        if len(self.api_keys) <= 1:
+            return self.api_keys
+
+        start = TavilySearchProvider._next_key_index % len(self.api_keys)
+        TavilySearchProvider._next_key_index += 1
+        return self.api_keys[start:] + self.api_keys[:start]
+
+    def _headers(self, api_key: str) -> dict[str, str]:
+        return {"Authorization": f"Bearer {api_key}"}
+
     async def get_link_results(
-        self, client: httpx.AsyncClient, query: str, num_results: int = 6
+        self,
+        client: httpx.AsyncClient,
+        query: str,
+        api_key: str,
+        num_results: int = 6,
     ) -> list[SearchResult]:
         response = await client.post(
             f"{self.host}/search",
-            headers={"Authorization": f"Bearer {self.api_key}"},
+            headers=self._headers(api_key),
             json={
                 "query": query,
                 "search_depth": "basic",
@@ -46,8 +83,11 @@ class TavilySearchProvider(SearchProvider):
         if response.status_code == 429:
             raise RuntimeError(
                 "Tavily rate limit hit. "
-                "Wait a moment or upgrade your plan at tavily.com"
+                "Trying the next configured key."
             )
+        if response.status_code >= 500:
+            body = response.text[:200]
+            raise RuntimeError(f"Tavily service error {response.status_code}: {body}")
         if response.status_code >= 400:
             body = response.text[:200]
             raise RuntimeError(f"Tavily error {response.status_code}: {body}")
@@ -73,11 +113,15 @@ class TavilySearchProvider(SearchProvider):
         ]
 
     async def get_image_results(
-        self, client: httpx.AsyncClient, query: str, num_results: int = 4
+        self,
+        client: httpx.AsyncClient,
+        query: str,
+        api_key: str,
+        num_results: int = 4,
     ) -> list[str]:
         response = await client.post(
             f"{self.host}/search",
-            headers={"Authorization": f"Bearer {self.api_key}"},
+            headers=self._headers(api_key),
             json={
                 "query": query,
                 "search_depth": "basic",
