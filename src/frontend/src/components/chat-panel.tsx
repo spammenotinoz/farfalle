@@ -62,9 +62,11 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
 
   const {
     handleSend,
+    stopResearch,
     streamingMessage,
     isStreamingMessage,
     isStreamingProSearch,
+    isResearching,
   } = useChat();
   const { messages, setMessages, setThreadId } = useChatStore();
   const { data: thread, isLoading, error } = useChatThread(threadId);
@@ -119,7 +121,11 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
         </div>
 
         <div className="mb-10 w-full max-w-3xl animate-slide-up" style={{ animationDelay: "80ms" }}>
-          <AskInput sendMessage={handleSend} />
+          <AskInput
+            sendMessage={handleSend}
+            onStop={stopResearch}
+            isResearching={isResearching}
+          />
         </div>
 
         <div className="w-full max-w-4xl animate-slide-up" style={{ animationDelay: "160ms" }}>
@@ -172,7 +178,12 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
           }}
         >
           <div style={{ maxWidth: "768px", margin: "0 auto" }}>
-            <AskInput isFollowingUp sendMessage={handleSend} />
+            <AskInput
+              isFollowingUp
+              sendMessage={handleSend}
+              onStop={stopResearch}
+              isResearching={isResearching}
+            />
           </div>
         </div>
       </div>

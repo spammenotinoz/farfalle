@@ -55,17 +55,16 @@ pnpm dev
 4. Response streams via SSE back to frontend
 5. Chat history saved to PostgreSQL (if `DB_ENABLED=True`)
 
-### Two Search Modes
-- **Standard**: Single search → LLM answer
-- **Pro Search** (agentic): Multi-step planning → multiple searches → ranked results → synthesized answer
+### Research Mode
+- `/chat` always uses the agentic deep research flow: multi-step planning → multiple searches → ranked results → synthesized answer.
 
 ### Key Directories
 
 ```
 src/backend/
   ├── main.py              # FastAPI entry point
-  ├── chat.py              # Standard chat streaming
-  ├── agent_search.py      # Pro search mode (multi-step agent)
+  ├── chat.py              # Legacy single-pass chat streaming helpers
+  ├── agent_search.py      # Deep research mode (multi-step agent)
   ├── schemas.py           # Pydantic request/response models
   ├── prompts.py           # LLM prompt templates
   ├── llm/base.py          # LLM abstraction (OpenAI-compatible)
@@ -102,8 +101,6 @@ ENABLE_LOCAL_MODELS=False
 **Frontend (`.env`):**
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_LOCAL_MODE_ENABLED=true
-NEXT_PUBLIC_PRO_MODE_ENABLED=true
 ```
 
 ## Available Chat Models

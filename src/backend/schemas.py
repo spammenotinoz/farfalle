@@ -38,7 +38,7 @@ class ChatRequest(BaseModel):
     query: str
     history: List[Message] = Field(default_factory=list)
     model: ChatModel = ChatModel.FAST
-    pro_search: bool = False
+    pro_search: bool = True
     research_depth: ResearchDepth = ResearchDepth.DEEP
 
 

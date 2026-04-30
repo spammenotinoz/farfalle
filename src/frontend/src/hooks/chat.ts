@@ -21,7 +21,7 @@ import {
   fetchEventSource,
   FetchEventSourceInit,
 } from "@microsoft/fetch-event-source";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useConfigStore, useChatStore } from "@/stores";
 import { env } from "../env.mjs";
 
@@ -31,9 +31,11 @@ let stepsDetails: AgentSearchStep[] = [];
 
 const streamChat = async ({
   request,
+  signal,
   onMessage,
 }: {
   request: ChatRequest;
+  signal?: AbortSignal;
   onMessage?: FetchEventSourceInit["onmessage"];
 }): Promise<void> => {
   return await fetchEventSource(`${BASE_URL}/chat`, {
@@ -43,6 +45,7 @@ const streamChat = async ({
     },
     keepalive: true,
     openWhenHidden: true,
+    signal,
     body: JSON.stringify({ ...request }),
     onmessage: onMessage,
     onerror: () => {},
@@ -62,13 +65,23 @@ const convertToChatRequest = (query: string, history: ChatMessage[]) => {
 
 export const useChat = () => {
   const { addMessage, messages, threadId, setThreadId } = useChatStore();
-  const { model, proMode, researchDepth } = useConfigStore();
+  const { model, researchDepth } = useConfigStore();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const [streamingMessage, setStreamingMessage] = useState<ChatMessage | null>(
     null,
   );
   const [isStreamingProSearch, setIsStreamingProSearch] = useState(false);
   const [isStreamingMessage, setIsStreamingMessage] = useState(false);
+  const [isResearching, setIsResearching] = useState(false);
+
+  const resetStreamingState = () => {
+    setStreamingMessage(null);
+    setIsStreamingMessage(false);
+    setIsStreamingProSearch(false);
+    setIsResearching(false);
+    abortControllerRef.current = null;
+  };
 
   const handleEvent = (eventItem: ChatResponseEvent, state: ChatMessage) => {
     switch (eventItem.event) {
@@ -94,7 +107,7 @@ export const useChat = () => {
         if (!state.agent_response) {
           break;
         }
-        // Hide the pro search once we start streaming
+        // Mark research planning complete once answer streaming begins.
         stepsDetails = stepsDetails.map((step) => ({
           ...step,
           status: AgentSearchStepStatus.DONE,
@@ -111,9 +124,7 @@ export const useChat = () => {
       case StreamEvent.STREAM_END:
         const endData = eventItem.data as StreamEndStream;
         addMessage({ ...state });
-        setStreamingMessage(null);
-        setIsStreamingMessage(false);
-        setIsStreamingProSearch(false);
+        resetStreamingState();
 
         // Only if the backend is using the DB
         if (endData.thread_id) {
@@ -180,9 +191,7 @@ export const useChat = () => {
           agent_response: state.agent_response,
           is_error_message: true,
         });
-        setStreamingMessage(null);
-        setIsStreamingMessage(false);
-        setIsStreamingProSearch(false);
+        resetStreamingState();
         return;
     }
     setStreamingMessage({
@@ -214,25 +223,51 @@ export const useChat = () => {
       };
       addMessage({ role: MessageRole.USER, content: request.query });
       stepsDetails = [];
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+      setIsResearching(true);
 
       const req: ChatRequest = {
         ...request,
         thread_id: threadId,
         model,
-        pro_search: proMode,
+        pro_search: true,
         research_depth: researchDepth,
       };
-      setIsStreamingProSearch(req.pro_search ?? false);
-      await streamChat({
-        request: req,
-        onMessage: (event) => {
-          // Handles keep-alive events
-          if (!event.data) return;
+      setIsStreamingProSearch(true);
+      try {
+        await streamChat({
+          request: req,
+          signal: abortController.signal,
+          onMessage: (event) => {
+            // Handles keep-alive events
+            if (!event.data) return;
 
-          const eventItem: ChatResponseEvent = JSON.parse(event.data);
-          handleEvent(eventItem, state);
-        },
-      });
+            const eventItem: ChatResponseEvent = JSON.parse(event.data);
+            handleEvent(eventItem, state);
+          },
+        });
+      } catch (error) {
+        if (abortController.signal.aborted) return;
+        throw error;
+      } finally {
+        if (abortController.signal.aborted) {
+          const partialContent = state.content.trim();
+          addMessage({
+            role: MessageRole.ASSISTANT,
+            content: partialContent
+              ? `${partialContent}\n\nResearch stopped before the final report was completed.`
+              : "Research stopped before the final report was completed.",
+            related_queries: [],
+            sources: state.sources,
+            images: state.images,
+            agent_response: state.agent_response,
+          });
+        }
+        if (abortControllerRef.current === abortController) {
+          resetStreamingState();
+        }
+      }
     },
   });
 
@@ -240,10 +275,16 @@ export const useChat = () => {
     await chat(convertToChatRequest(query, messages));
   };
 
+  const stopResearch = () => {
+    abortControllerRef.current?.abort();
+  };
+
   return {
     handleSend,
+    stopResearch,
     streamingMessage,
     isStreamingMessage,
     isStreamingProSearch,
+    isResearching,
   };
 };

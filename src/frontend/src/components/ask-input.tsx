@@ -3,8 +3,7 @@
 import TextareaAutosize from "react-textarea-autosize";
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { ArrowUp, Mic } from "lucide-react";
-import ProToggle from "./pro-toggle";
+import { ArrowUp, Mic, Square } from "lucide-react";
 import { ResearchDepthControl } from "./research-depth";
 import {
   Tooltip,
@@ -16,9 +15,13 @@ import { cn } from "@/lib/utils";
 
 export const AskInput = ({
   sendMessage,
+  onStop,
+  isResearching = false,
   isFollowingUp = false,
 }: {
   sendMessage: (message: string) => void | Promise<void>;
+  onStop?: () => void;
+  isResearching?: boolean;
   isFollowingUp?: boolean;
 }) => {
   const [input, setInput] = useState("");
@@ -27,7 +30,7 @@ export const AskInput = ({
 
   const handleSend = async () => {
     const message = input.trim();
-    if (message.length < 3 || isStreaming) return;
+    if (message.length < 3 || isStreaming || isResearching) return;
     setIsStreaming(true);
     try {
       await sendMessage(message);
@@ -84,7 +87,7 @@ export const AskInput = ({
       className="w-full"
       onSubmit={(e) => {
         e.preventDefault();
-        if (input.trim().length < 3) return;
+        if (input.trim().length < 3 || isResearching) return;
         handleSend();
       }}
     >
@@ -158,30 +161,53 @@ export const AskInput = ({
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                if (input.trim().length >= 3 && !isStreaming) handleSend();
+                if (input.trim().length >= 3 && !isStreaming && !isResearching) {
+                  handleSend();
+                }
               }
             }}
           />
 
-          {/* Send button */}
+          {/* Send/stop button */}
           <div className="flex-shrink-0">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    type="submit"
-                    variant="default"
-                    size="icon"
-                    className={cn(
-                      "rounded-md bg-foreground text-background hover:bg-foreground/80 transition-all duration-200",
-                      isFollowingUp ? "h-8 w-8" : "h-9 w-9",
-                    )}
-                    disabled={input.trim().length < 3 || isStreaming}
-                  >
-                    <ArrowUp size={isFollowingUp ? 16 : 18} strokeWidth={2.5} />
-                  </Button>
+                  {isResearching ? (
+                    <Button
+                      type="button"
+                      variant="default"
+                      size="icon"
+                      className={cn(
+                        "rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-200",
+                        isFollowingUp ? "h-8 w-8" : "h-9 w-9",
+                      )}
+                      onClick={onStop}
+                    >
+                      <Square
+                        size={isFollowingUp ? 13 : 15}
+                        strokeWidth={2.5}
+                        fill="currentColor"
+                      />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      variant="default"
+                      size="icon"
+                      className={cn(
+                        "rounded-md bg-foreground text-background hover:bg-foreground/80 transition-all duration-200",
+                        isFollowingUp ? "h-8 w-8" : "h-9 w-9",
+                      )}
+                      disabled={input.trim().length < 3 || isStreaming}
+                    >
+                      <ArrowUp size={isFollowingUp ? 16 : 18} strokeWidth={2.5} />
+                    </Button>
+                  )}
                 </TooltipTrigger>
-                <TooltipContent>Send</TooltipContent>
+                <TooltipContent>
+                  {isResearching ? "Stop research" : "Send"}
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -189,10 +215,7 @@ export const AskInput = ({
 
         {/* Bottom bar: research controls (homepage only) */}
         {!isFollowingUp && (
-          <div className="flex flex-col gap-2 border-t px-3 pb-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-2">
-              <ProToggle />
-            </div>
+          <div className="flex justify-end border-t px-3 pb-3 pt-2">
             <ResearchDepthControl />
           </div>
         )}

@@ -62,7 +62,7 @@ const MessagesList = ({
         )}
       </AnimatePresence>
 
-      {/* Live Pro Search steps while streaming */}
+      {/* Live research steps while streaming */}
       {isStreamingProSearch && streamingProResponse && (
         <motion.div
           initial={{ opacity: 0, y: -6 }}

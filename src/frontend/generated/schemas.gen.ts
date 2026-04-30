@@ -325,8 +325,8 @@ export const $ChatRequest = {
     },
     pro_search: {
       type: "boolean",
-      title: "Pro Search",
-      default: false,
+      title: "Research",
+      default: true,
     },
     research_depth: {
       allOf: [

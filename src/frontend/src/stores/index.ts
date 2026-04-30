@@ -15,8 +15,6 @@ const useStore = create<StoreState>()(
       name: "store",
       partialize: (state) => ({
         model: state.model,
-        localMode: state.localMode,
-        proMode: state.proMode,
         researchDepth: state.researchDepth,
       }),
     },
@@ -38,12 +36,8 @@ export const chatStore = useStore;
 
 export const useConfigStore = () =>
   useStore((state) => ({
-    localMode: state.localMode,
-    toggleLocalMode: state.toggleLocalMode,
     model: state.model,
     setModel: state.setModel,
-    proMode: state.proMode,
-    toggleProMode: state.toggleProMode,
     researchDepth: state.researchDepth,
     setResearchDepth: state.setResearchDepth,
   }));
