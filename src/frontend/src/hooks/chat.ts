@@ -179,6 +179,19 @@ export const useChat = () => {
 
         break;
       case StreamEvent.AGENT_FINISH:
+        if (stepsDetails.length > 0) {
+          const finalStepIndex = stepsDetails.length - 1;
+          stepsDetails = stepsDetails.map((step, index) => ({
+            ...step,
+            status:
+              index === finalStepIndex
+                ? AgentSearchStepStatus.CURRENT
+                : AgentSearchStepStatus.DONE,
+          }));
+          state.agent_response = {
+            steps_details: stepsDetails,
+          };
+        }
         break;
       case StreamEvent.ERROR:
         const errorData = eventItem.data as ErrorStream;

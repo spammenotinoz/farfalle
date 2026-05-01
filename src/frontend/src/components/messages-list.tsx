@@ -26,6 +26,9 @@ const MessagesList = ({
   const streamingProResponse = streamingMessage?.agent_response;
 
   const hasReportText = Boolean(streamingMessage?.content?.trim());
+  const finalStepStarted = Boolean(
+    streamingProResponse?.steps_details?.at(-1)?.status !== "default",
+  );
 
   return (
     <div className="flex flex-col pb-32">
@@ -83,7 +86,7 @@ const MessagesList = ({
         </motion.div>
       )}
 
-      {streamingMessage && isStreamingProSearch && !hasReportText && (
+      {streamingMessage && isStreamingProSearch && !hasReportText && !finalStepStarted && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -91,6 +94,17 @@ const MessagesList = ({
         >
           <Loader2 className="h-4 w-4 animate-spin" />
           Reading sources and preparing the report...
+        </motion.div>
+      )}
+
+      {streamingMessage && isStreamingMessage && finalStepStarted && !hasReportText && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-3 flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300"
+        >
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Starting report generation...
         </motion.div>
       )}
 
@@ -106,7 +120,7 @@ const MessagesList = ({
       )}
 
       {/* Streaming answer */}
-      {streamingMessage && isStreamingMessage && (
+      {streamingMessage && isStreamingMessage && hasReportText && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

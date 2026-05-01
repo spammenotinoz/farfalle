@@ -202,12 +202,16 @@ export const ProSearchRender = ({
     (step) => step.status === AgentSearchStepStatus.CURRENT,
   );
   const activeIndex = currentIndex === -1 ? Math.max(doneCount - 1, 0) : currentIndex;
-  const researchComplete = reportStarted || (!isStreamingProSearch && doneCount > 0);
+  const allStepsDone = steps.length > 0 && doneCount === steps.length;
+  const researchComplete = reportStarted || allStepsDone;
   const progress = researchComplete
     ? 100
     : steps.length
       ? Math.round((doneCount / steps.length) * 100)
       : 0;
+  const isSynthesisStep =
+    currentIndex === steps.length - 1 &&
+    steps[currentIndex]?.status === AgentSearchStepStatus.CURRENT;
   const currentStep = steps[activeIndex]?.step ?? "Synthesizing findings";
   const sourceCount = steps.reduce(
     (total, step) => total + (step.results?.length ?? 0),
@@ -236,7 +240,11 @@ export const ProSearchRender = ({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold leading-tight">
-                {researchComplete ? "Research complete" : "Research in progress"}
+                {researchComplete
+                  ? "Research complete"
+                  : isSynthesisStep
+                    ? "Generating report"
+                    : "Research in progress"}
               </p>
               {isStreamingProSearch && !researchComplete && (
                 <span className="h-1.5 w-1.5 rounded-full bg-tint animate-pulse" />
@@ -245,6 +253,8 @@ export const ProSearchRender = ({
             <p className="truncate text-xs text-muted-foreground">
               {reportStarted
                 ? "Sources gathered. Generating report below."
+                : isSynthesisStep
+                  ? "Sources gathered. Writing the report now."
                 : currentStep}
             </p>
           </div>
