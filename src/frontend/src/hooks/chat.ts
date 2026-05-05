@@ -44,11 +44,17 @@ const streamChat = async ({
       "Content-Type": "application/json",
     },
     keepalive: true,
-    openWhenHidden: true,
+    // Removed openWhenHidden: true — Safari aggressively throttles/closes
+    // background SSE connections, causing silent stream deaths with no recovery.
     signal,
     body: JSON.stringify({ ...request }),
     onmessage: onMessage,
-    onerror: () => {},
+    // Re-throw on error so callers can catch it and surface the failure.
+    // Previously was () => {}, which silently swallowed all errors on Safari.
+    onerror: (err) => {
+      console.error("[fetchEventSource] SSE error", err);
+      throw err;
+    },
   });
 };
 

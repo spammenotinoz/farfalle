@@ -40,9 +40,20 @@ def create_error_event(detail: str):
 
 
 def configure_middleware(app: FastAPI):
+    # Allow credentials=True requires explicit origins (cannot use "*")
+    # Safelist known frontend origins; add your deployment URL if it differs
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+    # Also allow any NEXT_PUBLIC_API_URL that isn't localhost
+    api_url = os.environ.get("NEXT_PUBLIC_API_URL", "")
+    if api_url and api_url not in allowed_origins:
+        allowed_origins.append(api_url)
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
