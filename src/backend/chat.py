@@ -85,9 +85,23 @@ DEPTH_CONFIG = {
 }
 
 
+# Wall-clock limits per depth. Conservative — Deep on cold cache approaches 3 min.
+RESEARCH_TIMEOUT_SECS = {
+    ResearchDepth.QUICK: 60,
+    ResearchDepth.BALANCED: 180,
+    ResearchDepth.DEEP: 300,
+}
+
+
 def get_depth_config(depth: ResearchDepth | None) -> dict:
     return DEPTH_CONFIG.get(
         depth or ResearchDepth.DEEP, DEPTH_CONFIG[ResearchDepth.DEEP]
+    )
+
+
+def get_research_timeout(depth: ResearchDepth | None) -> int:
+    return RESEARCH_TIMEOUT_SECS.get(
+        depth or ResearchDepth.DEEP, RESEARCH_TIMEOUT_SECS[ResearchDepth.DEEP]
     )
 
 

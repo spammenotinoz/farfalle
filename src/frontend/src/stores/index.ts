@@ -31,6 +31,7 @@ export const useChatStore = () =>
     threadId: state.threadId,
     setThreadId: state.setThreadId,
     clearMessages: state.clearMessages,
+    removeLastTurn: state.removeLastTurn,
   }), shallow);
 
 /** Raw store — use for imperative access (e.g. getState, subscribe) */

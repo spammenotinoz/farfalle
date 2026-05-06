@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import {
   AgentSearchFullResponse,
   AgentSearchStep,
@@ -9,6 +9,7 @@ import {
   BookOpen,
   CheckCircle2,
   Circle,
+  Clock,
   Loader2,
   SearchIcon,
   Sparkles,
@@ -16,7 +17,8 @@ import {
 import { Logo } from "./search-results";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "./ui/skeleton";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import type { ReadingPagesState, StallStatus } from "@/hooks/chat";
 
 const statusCopy = {
   [AgentSearchStepStatus.DONE]: "Done",
@@ -33,42 +35,93 @@ function compactDomain(url: string) {
   }
 }
 
+function formatElapsed(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+// Date.now() deltas (not counter increments) so the timer stays accurate when
+// the tab is backgrounded and the interval throttles. Polls at 250ms for a
+// smooth seconds tick. When `active` flips false the value freezes.
+function useElapsed(active: boolean): string {
+  const [ms, setMs] = useState(0);
+  const startRef = useRef<number | null>(null);
+  const frozenRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!active) {
+      startRef.current = null;
+      return;
+    }
+    startRef.current = Date.now() - frozenRef.current;
+    const id = setInterval(() => {
+      if (startRef.current != null) {
+        setMs(Date.now() - startRef.current);
+      }
+    }, 250);
+    return () => {
+      clearInterval(id);
+      if (startRef.current != null) {
+        frozenRef.current = Date.now() - startRef.current;
+      }
+    };
+  }, [active]);
+
+  return formatElapsed(ms);
+}
+
 const EvidenceChips = ({
   queries,
   results,
 }: {
   queries: string[];
   results: SearchResult[];
-}) => (
-  <div className="mt-2 flex flex-wrap gap-1.5">
-    {queries.slice(0, 2).map((query, index) => (
-      <span
-        key={`query-${index}`}
-        className="inline-flex max-w-full items-center gap-1 rounded bg-tint/10 px-2 py-0.5 text-[11px] text-tint"
-      >
-        <SearchIcon className="h-3 w-3 flex-shrink-0" />
-        <span className="max-w-[220px] truncate">{query}</span>
-      </span>
-    ))}
-    {results.slice(0, 4).map((result, index) => (
-      <a
-        key={`result-${index}`}
-        href={result.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex max-w-full items-center gap-1 rounded bg-muted/60 px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <Logo url={result.url} size={10} />
-        <span className="max-w-[96px] truncate">{compactDomain(result.url)}</span>
-      </a>
-    ))}
-    {queries.length + results.length === 0 && (
-      <span className="text-[11px] text-muted-foreground">
-        Preparing searches...
-      </span>
-    )}
-  </div>
-);
+}) => {
+  const reduced = useReducedMotion();
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {queries.slice(0, 2).map((query, index) => (
+        <span
+          key={`query-${index}`}
+          className="inline-flex max-w-full items-center gap-1 rounded bg-tint/10 px-2 py-0.5 text-[11px] text-tint"
+        >
+          <SearchIcon className="h-3 w-3 flex-shrink-0" />
+          <span className="max-w-[220px] truncate">{query}</span>
+        </span>
+      ))}
+      <AnimatePresence initial={false}>
+        {results.slice(0, 4).map((result, index) => (
+          <motion.a
+            key={`result-${result.url}`}
+            href={result.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={reduced ? false : { opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={
+              reduced
+                ? { duration: 0 }
+                : { duration: 0.18, delay: index * 0.04 }
+            }
+            className="inline-flex max-w-full items-center gap-1 rounded bg-muted/60 px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Logo url={result.url} size={10} />
+            <span className="max-w-[96px] truncate">
+              {compactDomain(result.url)}
+            </span>
+          </motion.a>
+        ))}
+      </AnimatePresence>
+      {queries.length + results.length === 0 && (
+        <span className="text-[11px] text-muted-foreground">
+          Preparing searches...
+        </span>
+      )}
+    </div>
+  );
+};
 
 const StepIcon = ({ status }: { status: AgentSearchStepStatus }) => {
   if (status === AgentSearchStepStatus.DONE) {
@@ -97,21 +150,22 @@ const StepRow = memo(
     index: number;
     active: boolean;
   }) => {
+    const reduced = useReducedMotion();
     const status = step.status ?? AgentSearchStepStatus.DEFAULT;
     return (
       <motion.div
         layout
-        initial={{ opacity: 0, y: 6 }}
+        initial={reduced ? false : { opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, delay: index * 0.02 }}
+        transition={reduced ? { duration: 0 } : { duration: 0.2, delay: index * 0.02 }}
         className={cn(
-          "rounded-md border px-3 py-2 transition-colors",
+          "rounded-md border px-3 py-2.5 transition-colors",
           active
             ? "border-tint/35 bg-tint/5"
             : "border-border/60 bg-background/45",
         )}
       >
-        <div className="flex items-start gap-2.5">
+        <div className="flex items-start gap-3">
           <div className="mt-0.5 flex-shrink-0">
             <StepIcon status={status} />
           </div>
@@ -143,10 +197,10 @@ const StepRow = memo(
             <AnimatePresence initial={false}>
               {active && (
                 <motion.div
-                  initial={{ height: 0, opacity: 0 }}
+                  initial={reduced ? false : { height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  exit={reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                  transition={reduced ? { duration: 0 } : { duration: 0.2 }}
                   className="overflow-hidden"
                 >
                   <EvidenceChips
@@ -185,10 +239,14 @@ export const ProSearchRender = ({
   streamingProResponse,
   isStreamingProSearch = false,
   reportStarted = false,
+  readingPages = null,
+  stallStatus = "ok",
 }: {
   streamingProResponse: AgentSearchFullResponse | null;
   isStreamingProSearch?: boolean;
   reportStarted?: boolean;
+  readingPages?: ReadingPagesState | null;
+  stallStatus?: StallStatus;
 }) => {
   if (!streamingProResponse?.steps_details) {
     return isStreamingProSearch ? <ProSearchSkeleton /> : null;
@@ -217,6 +275,25 @@ export const ProSearchRender = ({
     (total, step) => total + (step.results?.length ?? 0),
     0,
   );
+  const failedCount = readingPages?.failedCount ?? 0;
+  const showReadingPages =
+    isSynthesisStep && readingPages && readingPages.total > 0;
+  const stalled = stallStatus === "warning" && !researchComplete;
+  const elapsed = useElapsed(isStreamingProSearch && !researchComplete);
+
+  const subtitle = stalled
+    ? "Still working…"
+    : showReadingPages
+      ? `Reading source ${readingPages.current} of ${readingPages.total}${
+          readingPages.currentUrl
+            ? ` — ${compactDomain(readingPages.currentUrl)}`
+            : "…"
+        }`
+      : reportStarted
+        ? "Sources gathered. Generating report below."
+        : isSynthesisStep
+          ? "Sources gathered. Writing the report now."
+          : currentStep;
 
   return (
     <motion.section
@@ -225,8 +302,10 @@ export const ProSearchRender = ({
       animate={{ opacity: 1, y: 0 }}
       className="mb-3 overflow-hidden rounded-md border bg-card/70 shadow-sm"
       aria-label="Research progress"
+      data-testid="research-card"
+      data-research-complete={researchComplete ? "true" : undefined}
     >
-      <div className="border-b bg-muted/20 px-3 py-2.5">
+      <div className="border-b bg-muted/20 px-3.5 py-3">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-tint/10 text-tint">
             {researchComplete ? (
@@ -246,21 +325,55 @@ export const ProSearchRender = ({
                     ? "Generating report"
                     : "Research in progress"}
               </p>
-              {isStreamingProSearch && !researchComplete && (
-                <span className="h-1.5 w-1.5 rounded-full bg-tint animate-pulse" />
+              {stalled ? (
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"
+                  aria-hidden="true"
+                />
+              ) : (
+                isStreamingProSearch &&
+                !researchComplete && (
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-tint animate-pulse"
+                    aria-hidden="true"
+                  />
+                )
               )}
             </div>
-            <p className="truncate text-xs text-muted-foreground">
-              {reportStarted
-                ? "Sources gathered. Generating report below."
-                : isSynthesisStep
-                  ? "Sources gathered. Writing the report now."
-                : currentStep}
+            <p
+              className="truncate text-xs text-muted-foreground"
+              role="status"
+              aria-live="polite"
+              aria-atomic="false"
+              data-testid="research-subtitle"
+            >
+              {subtitle}
             </p>
           </div>
-          <div className="hidden flex-shrink-0 items-center gap-1.5 rounded bg-background px-2 py-1 text-[11px] text-muted-foreground sm:flex">
-            <BookOpen className="h-3 w-3 text-tint" />
-            {sourceCount} sources
+          <div className="flex flex-shrink-0 items-center gap-2">
+            {(isStreamingProSearch || researchComplete) && (
+              <span
+                className="hidden items-center gap-1 rounded bg-background px-1.5 py-1 text-[11px] tabular-nums text-muted-foreground sm:inline-flex"
+                data-testid="elapsed-timer"
+                title="Elapsed time"
+                aria-hidden="true"
+              >
+                <Clock className="h-3 w-3" />
+                {elapsed}
+              </span>
+            )}
+            <div
+              className="flex items-center gap-1.5 rounded bg-background px-2 py-1 text-[11px] text-muted-foreground"
+              data-testid="source-count"
+            >
+              <BookOpen className="h-3 w-3 text-tint" />
+              {sourceCount} sources
+              {failedCount > 0 && (
+                <span className="text-amber-600 dark:text-amber-400">
+                  · {failedCount} unavailable
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">

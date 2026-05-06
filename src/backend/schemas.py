@@ -93,6 +93,7 @@ class StreamEvent(str, Enum):
     AGENT_QUERY_PLAN = "agent-query-plan"
     AGENT_SEARCH_QUERIES = "agent-search-queries"
     AGENT_READ_RESULTS = "agent-read-results"
+    AGENT_READ_PAGES = "agent-read-pages"
     AGENT_FINISH = "agent-finish"
     AGENT_FULL_RESPONSE = "agent-full-response"
 
@@ -110,6 +111,7 @@ class SearchResultStream(ChatObject):
     event_type: StreamEvent = StreamEvent.SEARCH_RESULTS
     results: List[SearchResult] = Field(default_factory=list)
     images: List[str] = Field(default_factory=list)
+    failed_count: int = 0
 
 
 class TextChunkStream(ChatObject):
@@ -163,6 +165,14 @@ class AgentFinishStream(ChatObject):
     event_type: StreamEvent = StreamEvent.AGENT_FINISH
 
 
+class AgentReadPagesStream(ChatObject):
+    event_type: StreamEvent = StreamEvent.AGENT_READ_PAGES
+    current: int
+    total: int
+    current_url: str | None = None
+    failed_count: int = 0
+
+
 class ChatResponseEvent(BaseModel):
     event: StreamEvent
     data: Union[
@@ -176,6 +186,7 @@ class ChatResponseEvent(BaseModel):
         AgentQueryPlanStream,
         AgentSearchQueriesStream,
         AgentReadResultsStream,
+        AgentReadPagesStream,
         AgentFinishStream,
         AgentSearchFullResponseStream,
     ]

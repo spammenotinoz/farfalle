@@ -37,6 +37,46 @@ export const $AgentQueryPlanStream = {
   title: "AgentQueryPlanStream",
 } as const;
 
+export const $AgentReadPagesStream = {
+  properties: {
+    event_type: {
+      allOf: [
+        {
+          $ref: "#/components/schemas/StreamEvent",
+        },
+      ],
+      default: "agent-read-pages",
+    },
+    current: {
+      type: "integer",
+      title: "Current",
+    },
+    total: {
+      type: "integer",
+      title: "Total",
+    },
+    current_url: {
+      anyOf: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Current Url",
+    },
+    failed_count: {
+      type: "integer",
+      title: "Failed Count",
+      default: 0,
+    },
+  },
+  type: "object",
+  required: ["current", "total"],
+  title: "AgentReadPagesStream",
+} as const;
+
 export const $AgentReadResultsStream = {
   properties: {
     event_type: {
@@ -380,6 +420,9 @@ export const $ChatResponseEvent = {
           $ref: "#/components/schemas/AgentReadResultsStream",
         },
         {
+          $ref: "#/components/schemas/AgentReadPagesStream",
+        },
+        {
           $ref: "#/components/schemas/AgentFinishStream",
         },
         {
@@ -570,6 +613,11 @@ export const $SearchResultStream = {
       type: "array",
       title: "Images",
     },
+    failed_count: {
+      type: "integer",
+      title: "Failed Count",
+      default: 0,
+    },
   },
   type: "object",
   title: "SearchResultStream",
@@ -614,6 +662,7 @@ export const $StreamEvent = {
     "agent-query-plan",
     "agent-search-queries",
     "agent-read-results",
+    "agent-read-pages",
     "agent-finish",
     "agent-full-response",
   ],

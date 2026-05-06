@@ -9,7 +9,7 @@ more accurate context for answer synthesis.
 import asyncio
 import re
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import AsyncIterator, Optional
 
 import httpx
 
@@ -106,6 +106,43 @@ async def fetch_page(
         return PageContent(url=url, title="", content="", error=str(e))
 
 
+async def read_pages_streaming(
+    urls: list[str],
+    max_pages: int = 4,
+    concurrency: int = 3,
+    timeout: float = 10.0,
+    max_chars: int = 4000,
+) -> AsyncIterator[tuple[PageContent, int, int, int]]:
+    """
+    Fetch URLs in parallel and yield each page as it resolves.
+
+    Yields:
+        (page, completed_count, total, failed_count) tuples in completion order.
+        A page is "failed" when content is empty or an error was set.
+    """
+    urls = urls[:max_pages]
+    total = len(urls)
+    if total == 0:
+        return
+
+    semaphore = asyncio.Semaphore(concurrency)
+
+    async def bounded_fetch(url: str) -> PageContent:
+        async with semaphore:
+            async with httpx.AsyncClient() as client:
+                return await fetch_page(client, url, timeout=timeout, max_chars=max_chars)
+
+    tasks = [asyncio.create_task(bounded_fetch(url)) for url in urls]
+    completed = 0
+    failed = 0
+    for task in asyncio.as_completed(tasks):
+        page = await task
+        completed += 1
+        if page.error or not page.content:
+            failed += 1
+        yield page, completed, total, failed
+
+
 async def read_pages(
     urls: list[str],
     max_pages: int = 4,
@@ -116,26 +153,20 @@ async def read_pages(
     """
     Fetch multiple URLs in parallel, respecting concurrency limits.
 
-    Args:
-        urls: List of URLs to fetch
-        max_pages: Maximum number of pages to fetch (takes top N)
-        concurrency: Max concurrent requests
-        timeout: Per-request timeout in seconds
-        max_chars: Max characters to extract per page
-
-    Returns:
-        List of PageContent objects (some may have error set)
+    Returns only pages with successful content; failures are dropped.
+    Use read_pages_streaming() to observe progress and failure counts.
     """
-    urls = urls[:max_pages]
-    semaphore = asyncio.Semaphore(concurrency)
-
-    async def bounded_fetch(url: str) -> PageContent:
-        async with semaphore:
-            async with httpx.AsyncClient() as client:
-                return await fetch_page(client, url, timeout=timeout, max_chars=max_chars)
-
-    pages = await asyncio.gather(*[bounded_fetch(url) for url in urls])
-    return [p for p in pages if p.content]  # Drop pages that failed silently
+    return [
+        page
+        async for page, *_ in read_pages_streaming(
+            urls,
+            max_pages=max_pages,
+            concurrency=concurrency,
+            timeout=timeout,
+            max_chars=max_chars,
+        )
+        if page.content
+    ]
 
 
 def format_pages_for_context(pages: list[PageContent], max_chars: int = 3000) -> str:

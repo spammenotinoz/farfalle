@@ -9,6 +9,7 @@ import {
 import { ProSearchRender } from "./pro-search-render";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
+import type { ReadingPagesState, StallStatus } from "@/hooks/chat";
 
 interface MessagesListProps {
   messages: ChatMessage[];
@@ -16,7 +17,10 @@ interface MessagesListProps {
   isStreamingMessage: boolean;
   isStreamingProSearch: boolean;
   isResearching: boolean;
+  readingPages?: ReadingPagesState | null;
+  stallStatus?: StallStatus;
   onRelatedQuestionSelect: (question: string) => void;
+  onRetryLast?: () => void;
 }
 
 const MessagesList = ({
@@ -25,7 +29,10 @@ const MessagesList = ({
   isStreamingMessage,
   isStreamingProSearch,
   isResearching,
+  readingPages = null,
+  stallStatus = "ok",
   onRelatedQuestionSelect,
+  onRetryLast,
 }: MessagesListProps) => {
   const streamingProResponse = streamingMessage?.agent_response;
 
@@ -71,6 +78,13 @@ const MessagesList = ({
               <AssistantMessageContent
                 message={message}
                 onRelatedQuestionSelect={onRelatedQuestionSelect}
+                onRetry={
+                  message.is_error_message &&
+                  index === messages.length - 1 &&
+                  !isResearching
+                    ? onRetryLast
+                    : undefined
+                }
               />
               {index !== messages.length - 1 && (
                 <Separator className="my-8 opacity-30" />
@@ -91,6 +105,8 @@ const MessagesList = ({
             streamingProResponse={streamingProResponse}
             isStreamingProSearch={isStreamingProSearch}
             reportStarted={hasReportText}
+            readingPages={readingPages}
+            stallStatus={stallStatus}
           />
         </motion.div>
       )}

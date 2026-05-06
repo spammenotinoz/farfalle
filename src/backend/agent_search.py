@@ -10,7 +10,7 @@ from backend.chat import get_depth_config, rephrase_query_with_history
 from backend.constants import get_model_string
 from backend.db.chat import save_turn_to_db
 from backend.llm.base import BaseLLM, OpenAILLM
-from backend.page_reader import read_pages, format_pages_for_context
+from backend.page_reader import read_pages, read_pages_streaming, format_pages_for_context
 from backend.prompts import (
     SYSTEM_PROMPT_PRO,
     QUERY_PLAN_PROMPT,
@@ -20,6 +20,7 @@ from backend.related_queries import generate_related_queries
 from backend.schemas import (
     AgentFinishStream,
     AgentQueryPlanStream,
+    AgentReadPagesStream,
     AgentReadResultsStream,
     AgentSearchFullResponse,
     AgentSearchQueriesStream,
@@ -369,14 +370,27 @@ async def stream_pro_search_objects(
                 ),
             )
 
-            # Fetch full content from top source pages for richer context
+            # Fetch full content from top source pages for richer context.
+            # Emit per-page progress so the long silent gap is visible to the user.
             source_urls = [r.url for r in search_results[: depth_config["pages"]]]
-            pages = await read_pages(
+            pages: list = []
+            async for page, completed, total, failed in read_pages_streaming(
                 source_urls,
                 max_pages=depth_config["pages"],
                 concurrency=4,
                 max_chars=depth_config["page_chars"],
-            )
+            ):
+                if page.content:
+                    pages.append(page)
+                yield ChatResponseEvent(
+                    event=StreamEvent.AGENT_READ_PAGES,
+                    data=AgentReadPagesStream(
+                        current=completed,
+                        total=total,
+                        current_url=page.url,
+                        failed_count=failed,
+                    ),
+                )
             pages_context = format_pages_for_context(
                 pages, max_chars=depth_config["page_chars"]
             )

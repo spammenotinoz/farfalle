@@ -4,7 +4,7 @@ import { SearchResults } from "./search-results";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ImageSection } from "./image-section";
 import { ChatMessage } from "../../generated";
-import { Copy, Share2, Download, MoreHorizontal, FileText, Loader2 } from "lucide-react";
+import { Copy, Share2, Download, MoreHorizontal, FileText, Loader2, RotateCcw } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen } from "lucide-react";
 
@@ -42,10 +42,26 @@ const InlineSources = ({ sources }: { sources: ChatMessage["sources"] }) => {
 const URL_REGEX = /(https?:\/\/[^\s]+)/;
 
 // ─── Error Message ───────────────────────────────────────────────────────
-export function ErrorMessage({ content }: { content: string }) {
+export function ErrorMessage({
+  content,
+  onRetry,
+}: {
+  content: string;
+  onRetry?: () => void;
+}) {
   const words = content.split(" ");
+  const retryRef = useRef<HTMLButtonElement | null>(null);
+
+  // Move focus to retry on mount so keyboard users can recover with Enter.
+  useEffect(() => {
+    if (onRetry) retryRef.current?.focus();
+  }, [onRetry]);
+
   return (
-    <Alert className="bg-destructive/5 border-destructive/15 p-5 rounded-md">
+    <Alert
+      className="bg-destructive/5 border-destructive/15 p-5 rounded-md"
+      role="alert"
+    >
       <AlertDescription className="text-sm text-foreground leading-relaxed">
         {words.map((word, index) => {
           URL_REGEX.lastIndex = 0; // reset before every test call
@@ -59,6 +75,22 @@ export function ErrorMessage({ content }: { content: string }) {
           return word + " ";
         })}
       </AlertDescription>
+      {onRetry && (
+        <div className="mt-3">
+          <Button
+            ref={retryRef}
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onRetry}
+            className="gap-1.5"
+            data-testid="retry-button"
+          >
+            <RotateCcw size={14} />
+            Try again
+          </Button>
+        </div>
+      )}
     </Alert>
   );
 }
@@ -141,15 +173,17 @@ export const AssistantMessageContent = ({
   message,
   isStreaming = false,
   onRelatedQuestionSelect,
+  onRetry,
 }: {
   message: ChatMessage;
   isStreaming?: boolean;
   onRelatedQuestionSelect: (question: string) => void;
+  onRetry?: () => void;
 }) => {
   const { sources, content, related_queries, images, is_error_message = false } = message;
 
   if (is_error_message) {
-    return <ErrorMessage content={message.content} />;
+    return <ErrorMessage content={message.content} onRetry={onRetry} />;
   }
 
   const hasSources = sources && sources.length > 0;
@@ -181,7 +215,12 @@ export const AssistantMessageContent = ({
         {!isStreaming && content && <ContentActions content={content} />}
       </div>
 
-      <div className="answer-card mb-4">
+      <div
+        className="answer-card mb-4"
+        aria-live="polite"
+        aria-busy={isStreaming}
+        data-testid="research-answer"
+      >
         {/* Meta bar */}
         <AnswerMetaBar sources={sources} isStreaming={isStreaming} />
 

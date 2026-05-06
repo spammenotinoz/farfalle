@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import {
   AgentQueryPlanStream,
+  AgentReadPagesStream,
   AgentReadResultsStream,
   AgentSearchQueriesStream,
   AgentSearchStep,
@@ -21,11 +22,28 @@ import {
   fetchEventSource,
   FetchEventSourceInit,
 } from "@microsoft/fetch-event-source";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useConfigStore, useChatStore } from "@/stores";
 import { env } from "../env.mjs";
 
 const BASE_URL = env.NEXT_PUBLIC_API_URL;
+
+// Stall thresholds — coordinated with backend RESEARCH_TIMEOUT_SECS.
+// WARN_AFTER_MS: subtitle text changes to "Still working…" so the user knows
+//   we're not dead. HARD_ABORT_AFTER_SILENT_MS / HARD_ABORT_AFTER_TOTAL_MS:
+//   abort the SSE stream and show a retry button.
+const STALL_WARN_AFTER_MS = 30_000;
+const STALL_HARD_ABORT_AFTER_SILENT_MS = 90_000;
+const STALL_HARD_ABORT_AFTER_TOTAL_MS = 360_000;
+
+export type ReadingPagesState = {
+  current: number;
+  total: number;
+  currentUrl: string | null;
+  failedCount: number;
+};
+
+export type StallStatus = "ok" | "warning";
 
 const streamChat = async ({
   request,
@@ -68,12 +86,16 @@ const convertToChatRequest = (query: string, history: ChatMessage[]) => {
 };
 
 export const useChat = () => {
-  const { addMessage, messages, threadId, setThreadId } = useChatStore();
+  const { addMessage, messages, threadId, setThreadId, removeLastTurn } =
+    useChatStore();
   const { model, researchDepth } = useConfigStore();
   // Replaces the old module-level `let stepsDetails` — each hook instance
   // gets its own ref, preventing cross-instance state corruption on Safari.
   const stepsDetailsRef = useRef<AgentSearchStep[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastEventAtRef = useRef<number>(0);
+  const startedAtRef = useRef<number>(0);
+  const stallTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [streamingMessage, setStreamingMessage] = useState<ChatMessage | null>(
     null,
@@ -81,14 +103,34 @@ export const useChat = () => {
   const [isStreamingProSearch, setIsStreamingProSearch] = useState(false);
   const [isStreamingMessage, setIsStreamingMessage] = useState(false);
   const [isResearching, setIsResearching] = useState(false);
+  const [readingPages, setReadingPages] = useState<ReadingPagesState | null>(
+    null,
+  );
+  const [stallStatus, setStallStatus] = useState<StallStatus>("ok");
+
+  const clearStallTimer = () => {
+    if (stallTimerRef.current) {
+      clearInterval(stallTimerRef.current);
+      stallTimerRef.current = null;
+    }
+  };
 
   const resetStreamingState = () => {
     setStreamingMessage(null);
     setIsStreamingMessage(false);
     setIsStreamingProSearch(false);
     setIsResearching(false);
+    setReadingPages(null);
+    setStallStatus("ok");
+    clearStallTimer();
     abortControllerRef.current = null;
   };
+
+  useEffect(() => {
+    return () => {
+      clearStallTimer();
+    };
+  }, []);
 
   const handleEvent = (eventItem: ChatResponseEvent, state: ChatMessage) => {
     switch (eventItem.event) {
@@ -107,6 +149,14 @@ export const useChat = () => {
         const data = eventItem.data as SearchResultStream;
         state.sources = data.results ?? [];
         state.images = data.images ?? [];
+        if (typeof data.failed_count === "number" && data.failed_count > 0) {
+          setReadingPages((prev) => ({
+            current: prev?.current ?? 0,
+            total: prev?.total ?? 0,
+            currentUrl: prev?.currentUrl ?? null,
+            failedCount: data.failed_count ?? 0,
+          }));
+        }
         break;
       case StreamEvent.TEXT_CHUNK:
         state.content += (eventItem.data as TextChunkStream).text;
@@ -190,6 +240,15 @@ export const useChat = () => {
         }
 
         break;
+      case StreamEvent.AGENT_READ_PAGES:
+        const readPages = eventItem.data as AgentReadPagesStream;
+        setReadingPages({
+          current: readPages.current,
+          total: readPages.total,
+          currentUrl: readPages.current_url ?? null,
+          failedCount: readPages.failed_count ?? 0,
+        });
+        break;
       case StreamEvent.AGENT_FINISH:
         if (stepsDetailsRef.current.length > 0) {
           const finalStepIndex = stepsDetailsRef.current.length - 1;
@@ -250,7 +309,27 @@ export const useChat = () => {
       stepsDetailsRef.current = [];
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
+      startedAtRef.current = Date.now();
+      lastEventAtRef.current = Date.now();
+      setStallStatus("ok");
       setIsResearching(true);
+
+      // Watchdog: abort if the stream goes silent or runs too long.
+      // Refs are checked instead of state so updates aren't lost across renders.
+      clearStallTimer();
+      stallTimerRef.current = setInterval(() => {
+        const now = Date.now();
+        const sinceLastEvent = now - lastEventAtRef.current;
+        const sinceStart = now - startedAtRef.current;
+        if (
+          sinceLastEvent > STALL_HARD_ABORT_AFTER_SILENT_MS ||
+          sinceStart > STALL_HARD_ABORT_AFTER_TOTAL_MS
+        ) {
+          abortController.abort();
+        } else if (sinceLastEvent > STALL_WARN_AFTER_MS) {
+          setStallStatus("warning");
+        }
+      }, 1000);
 
       const req: ChatRequest = {
         ...request,
@@ -265,6 +344,13 @@ export const useChat = () => {
           request: req,
           signal: abortController.signal,
           onMessage: (event) => {
+            // Reset stall watchdog on every byte from the server (including
+            // SSE keep-alive comments that arrive with empty data). Always
+            // calling setStallStatus is fine — React bails out when the
+            // value is unchanged.
+            lastEventAtRef.current = Date.now();
+            setStallStatus("ok");
+
             // Handles keep-alive events
             if (!event.data) return;
 
@@ -276,18 +362,38 @@ export const useChat = () => {
         if (abortController.signal.aborted) return;
         throw error;
       } finally {
+        clearStallTimer();
         if (abortController.signal.aborted) {
+          const sinceStart = Date.now() - startedAtRef.current;
+          const stalled =
+            sinceStart > STALL_HARD_ABORT_AFTER_TOTAL_MS - 1000 ||
+            Date.now() - lastEventAtRef.current >
+              STALL_HARD_ABORT_AFTER_SILENT_MS - 1000;
           const partialContent = state.content.trim();
-          addMessage({
-            role: MessageRole.ASSISTANT,
-            content: partialContent
-              ? `${partialContent}\n\nResearch stopped before the final report was completed.`
-              : "Research stopped before the final report was completed.",
-            related_queries: [],
-            sources: state.sources,
-            images: state.images,
-            agent_response: state.agent_response,
-          });
+          if (stalled) {
+            addMessage({
+              role: MessageRole.ASSISTANT,
+              content: partialContent
+                ? `${partialContent}\n\nResearch stalled and was cancelled. Try again or pick a shorter depth.`
+                : "Research stalled. Try again or pick a shorter depth.",
+              related_queries: [],
+              sources: state.sources,
+              images: state.images,
+              agent_response: state.agent_response,
+              is_error_message: true,
+            });
+          } else {
+            addMessage({
+              role: MessageRole.ASSISTANT,
+              content: partialContent
+                ? `${partialContent}\n\nResearch stopped before the final report was completed.`
+                : "Research stopped before the final report was completed.",
+              related_queries: [],
+              sources: state.sources,
+              images: state.images,
+              agent_response: state.agent_response,
+            });
+          }
         }
         if (abortControllerRef.current === abortController) {
           resetStreamingState();
@@ -300,16 +406,28 @@ export const useChat = () => {
     await chat(convertToChatRequest(query, messages));
   };
 
+  // Pop the failed turn, drop any thread association (stale after a failure),
+  // and re-send the original query as a fresh research request.
+  const retryLast = async () => {
+    const query = removeLastTurn();
+    if (!query) return;
+    setThreadId(null);
+    await handleSend(query);
+  };
+
   const stopResearch = () => {
     abortControllerRef.current?.abort();
   };
 
   return {
     handleSend,
+    retryLast,
     stopResearch,
     streamingMessage,
     isStreamingMessage,
     isStreamingProSearch,
     isResearching,
+    readingPages,
+    stallStatus,
   };
 };

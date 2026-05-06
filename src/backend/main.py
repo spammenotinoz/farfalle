@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
 from backend.agent_search import stream_pro_search_qa
+from backend.chat import get_research_timeout
 from backend.db.chat import get_chat_history, get_thread
 from backend.db.engine import get_session
 from backend.constants import ChatModel
@@ -127,16 +128,24 @@ async def chat(
         chat_request.model = ChatModel.FAST
 
     async def generator():
+        timeout_secs = get_research_timeout(chat_request.research_depth)
         try:
             validate_model(chat_request.model)
             chat_request.pro_search = True
-            async for obj in stream_pro_search_qa(
-                request=chat_request, session=session
-            ):
-                if await request.is_disconnected():
-                    break
-                yield json.dumps(jsonable_encoder(obj))
-                await asyncio.sleep(0)
+            async with asyncio.timeout(timeout_secs):
+                async for obj in stream_pro_search_qa(
+                    request=chat_request, session=session
+                ):
+                    if await request.is_disconnected():
+                        break
+                    yield json.dumps(jsonable_encoder(obj))
+                    await asyncio.sleep(0)
+        except asyncio.TimeoutError:
+            yield create_error_event(
+                f"Research timed out after {timeout_secs}s. Try a shorter depth or a simpler query."
+            )
+            await asyncio.sleep(0)
+            return
         except Exception as e:
             print(traceback.format_exc())
             yield create_error_event(str(e))

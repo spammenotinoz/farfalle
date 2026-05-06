@@ -9,6 +9,14 @@ export type AgentQueryPlanStream = {
   steps?: Array<string>;
 };
 
+export type AgentReadPagesStream = {
+  event_type?: StreamEvent;
+  current: number;
+  total: number;
+  current_url?: string | null;
+  failed_count?: number;
+};
+
 export type AgentReadResultsStream = {
   event_type?: StreamEvent;
   step_number: number;
@@ -92,6 +100,7 @@ export type ChatResponseEvent = {
     | AgentQueryPlanStream
     | AgentSearchQueriesStream
     | AgentReadResultsStream
+    | AgentReadPagesStream
     | AgentFinishStream
     | AgentSearchFullResponseStream;
 };
@@ -150,6 +159,7 @@ export type SearchResultStream = {
   event_type?: StreamEvent;
   results?: Array<SearchResult>;
   images?: Array<string>;
+  failed_count?: number;
 };
 
 export type StreamEndStream = {
@@ -168,6 +178,7 @@ export enum StreamEvent {
   AGENT_QUERY_PLAN = "agent-query-plan",
   AGENT_SEARCH_QUERIES = "agent-search-queries",
   AGENT_READ_RESULTS = "agent-read-results",
+  AGENT_READ_PAGES = "agent-read-pages",
   AGENT_FINISH = "agent-finish",
   AGENT_FULL_RESPONSE = "agent-full-response",
 }
