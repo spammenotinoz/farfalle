@@ -59,7 +59,9 @@ const streamChat = async ({
     headers: {
       "Content-Type": "application/json",
     },
-    keepalive: true,
+    // keepalive omitted — Safari buffers the entire response body when keepalive
+    // is set on a streaming fetch, silently breaking SSE in regular (non-private)
+    // mode. AbortController handles cleanup on navigation/unmount instead.
     // Removed openWhenHidden: true — Safari aggressively throttles/closes
     // background SSE connections, causing silent stream deaths with no recovery.
     signal,
@@ -360,7 +362,22 @@ export const useChat = () => {
         });
       } catch (error) {
         if (abortController.signal.aborted) return;
-        throw error;
+        // Network/CORS/extension-blocked errors — show a recoverable error
+        // instead of re-throwing. A re-throw propagates through mutateAsync to
+        // the event handler with no catch, becoming an unhandled rejection that
+        // crashes the React component tree (blank page) in React 18 / Safari.
+        console.error("[chat] SSE stream failed", error);
+        addMessage({
+          role: MessageRole.ASSISTANT,
+          content:
+            "Could not connect to the research service. Check your connection and try again.",
+          related_queries: [],
+          sources: state.sources,
+          images: state.images,
+          agent_response: state.agent_response,
+          is_error_message: true,
+        });
+        return;
       } finally {
         clearStallTimer();
         if (abortController.signal.aborted) {
@@ -403,7 +420,13 @@ export const useChat = () => {
   });
 
   const handleSend = async (query: string) => {
-    await chat(convertToChatRequest(query, messages));
+    try {
+      await chat(convertToChatRequest(query, messages));
+    } catch (err) {
+      // mutationFn handles errors internally; this catch guards against any
+      // edge case where mutateAsync still throws (e.g. React Query internals).
+      console.error("[handleSend] unhandled error", err);
+    }
   };
 
   // Pop the failed turn, drop any thread association (stale after a failure),
