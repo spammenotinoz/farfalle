@@ -3,6 +3,7 @@ import json
 import os
 import traceback
 from typing import Generator
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -41,17 +42,22 @@ def create_error_event(detail: str):
 
 def configure_middleware(app: FastAPI):
     # Allow credentials=True requires explicit origins (cannot use "*").
-    # Explicitly safelist the production frontend domain — add staging/dev
-    # origins here or via FRONTEND_ORIGIN env var.
+    # Safelist the production frontend and backend origins — add more here or
+    # via env vars.
     allowed_origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         os.environ.get("FRONTEND_ORIGIN", ""),
+        os.environ.get("BACKEND_ORIGIN", ""),
     ]
-    # Also allow the NEXT_PUBLIC_API_URL base if it's a distinct origin
+    # NEXT_PUBLIC_API_URL may include a path suffix (e.g. /back); extract only
+    # the origin (scheme + host + optional port) so CORS matching works correctly.
     api_url = os.environ.get("NEXT_PUBLIC_API_URL", "").rstrip("/")
     if api_url:
-        allowed_origins.append(api_url)
+        try:
+            allowed_origins.append(f"{urlparse(api_url).scheme}://{urlparse(api_url).netloc}")
+        except Exception:
+            allowed_origins.append(api_url)
     allowed_origins = [o for o in allowed_origins if o]  # drop empty strings
 
     app.add_middleware(
