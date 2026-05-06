@@ -84,7 +84,8 @@ def configure_middleware(app: FastAPI):
         # If set, the browser waits for the full Content-Length before delivering
         # any body bytes to JavaScript, which makes SSE appear broken.
         if request.url.path in ("/chat",):
-            response.headers.pop("Content-Length", None)
+            if "content-length" in response.headers:
+                del response.headers["content-length"]
         return response
 
     # CORSMiddleware handles all OPTIONS preflights automatically; no explicit
