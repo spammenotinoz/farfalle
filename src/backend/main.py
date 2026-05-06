@@ -40,16 +40,19 @@ def create_error_event(detail: str):
 
 
 def configure_middleware(app: FastAPI):
-    # Allow credentials=True requires explicit origins (cannot use "*")
-    # Safelist known frontend origins; add your deployment URL if it differs
+    # Allow credentials=True requires explicit origins (cannot use "*").
+    # Explicitly safelist the production frontend domain — add staging/dev
+    # origins here or via FRONTEND_ORIGIN env var.
     allowed_origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        os.environ.get("FRONTEND_ORIGIN", ""),
     ]
-    # Also allow any NEXT_PUBLIC_API_URL that isn't localhost
-    api_url = os.environ.get("NEXT_PUBLIC_API_URL", "")
-    if api_url and api_url not in allowed_origins:
+    # Also allow the NEXT_PUBLIC_API_URL base if it's a distinct origin
+    api_url = os.environ.get("NEXT_PUBLIC_API_URL", "").rstrip("/")
+    if api_url:
         allowed_origins.append(api_url)
+    allowed_origins = [o for o in allowed_origins if o]  # drop empty strings
 
     app.add_middleware(
         CORSMiddleware,
@@ -58,6 +61,12 @@ def configure_middleware(app: FastAPI):
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Explicitly register OPTIONS so preflight requests never fall through to
+    # a route handler that might swallow them before the CORS middleware fires.
+    @app.options("/{path:path}")
+    async def preflight(path: str):
+        return {"ok": True}
 
 
 def create_app() -> FastAPI:
