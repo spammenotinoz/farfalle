@@ -188,6 +188,15 @@
   }
 }
 
+/* ─── Fixed input bar — clears the 320px sidebar at the same breakpoint ── */
+/* The sidebar is position:fixed right:0 width:320px, visible at ≥1100px.  */
+/* Without this, the input bar (left:0 right:0) overlaps the sidebar.       */
+@media (min-width: 1100px) {
+  .input-bar-sidebar {
+    right: 340px; /* 320px sidebar + 20px gap matches the margin-right on .content-column */
+  }
+}
+
 /* ─── Chat layout: content + sidebar ─────────────────────────────── */
 .chat-layout {
   display: grid;

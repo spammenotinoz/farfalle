@@ -15,6 +15,7 @@ import { StarterQuestionsList } from "./starter-questions";
 import { SourcesSidebar } from "./sources-sidebar";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const useAutoScroll = (ref: React.RefObject<HTMLDivElement>) => {
   const { messages } = useChatStore();
@@ -23,21 +24,6 @@ const useAutoScroll = (ref: React.RefObject<HTMLDivElement>) => {
       ref.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [messages, ref]);
-};
-
-const useAutoResizeInput = (
-  ref: React.RefObject<HTMLDivElement>,
-  setWidth: (width: number) => void,
-) => {
-  const { messages } = useChatStore();
-  useEffect(() => {
-    const updatePosition = () => {
-      if (ref.current) setWidth(ref.current.scrollWidth);
-    };
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    return () => window.removeEventListener("resize", updatePosition);
-  }, [messages, ref, setWidth]);
 };
 
 const useAutoFocus = (ref: React.RefObject<HTMLTextAreaElement>) => {
@@ -74,7 +60,6 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
   const { messages, setMessages, setThreadId } = useChatStore();
   const { data: thread, isLoading, error } = useChatThread(threadId);
 
-  const [width, setWidth] = useState(0);
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const messageBottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -88,7 +73,6 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
 
   useEffect(() => { setMounted(true); }, []);
   useAutoScroll(messageBottomRef);
-  useAutoResizeInput(messagesRef, setWidth);
   useAutoFocus(inputRef);
 
   useEffect(() => {
@@ -187,16 +171,14 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
         />
         <div ref={messageBottomRef} className="h-0" />
 
-        {/* Fixed bottom input */}
+        {/* Fixed bottom input — input-bar-sidebar shifts right at ≥1100px to clear the sources sidebar */}
         <div
-          className="fixed bottom-0 left-0 right-0 px-4 sm:px-6 bg-gradient-to-t from-background via-background to-transparent pt-10 pb-4"
-          style={{
-            width: `${width}px`,
-            margin: "0 auto",
-            maxWidth: "calc(100vw - 2rem)",
-          }}
+          className={cn(
+            "fixed bottom-0 left-0 right-0 px-4 sm:px-6 bg-gradient-to-t from-background via-background to-transparent pt-10 pb-4",
+            showSidebar && "input-bar-sidebar",
+          )}
         >
-          <div style={{ maxWidth: "768px", margin: "0 auto" }}>
+          <div className="max-w-3xl mx-auto">
             <AskInput
               isFollowingUp
               sendMessage={handleSend}

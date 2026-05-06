@@ -188,12 +188,11 @@ export const useChat = () => {
         // Only if the backend is using the DB
         if (endData.thread_id) {
           setThreadId(endData.thread_id);
-          // Guard: window.history.pushState throws SecurityError in Safari when
-          // fired from a component that has since unmounted (e.g. tab hidden
-          // mid-stream). Checking document.hidden is sufficient.
-          if (!document.hidden) {
-            window.history.pushState({}, "", `/search/${endData.thread_id}`);
-          }
+          // URL update intentionally omitted: history.pushState is intercepted
+          // by Next.js App Router as a route navigation, unmounting the current
+          // page and causing a blank screen during the transition. The thread ID
+          // is persisted in the Zustand store so the conversation remains
+          // accessible. ChatPanel reads threadId from the store for API calls.
         }
         return;
       case StreamEvent.AGENT_QUERY_PLAN:
