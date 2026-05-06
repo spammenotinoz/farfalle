@@ -248,11 +248,8 @@ export const ProSearchRender = ({
   readingPages?: ReadingPagesState | null;
   stallStatus?: StallStatus;
 }) => {
-  if (!streamingProResponse?.steps_details) {
-    return isStreamingProSearch ? <ProSearchSkeleton /> : null;
-  }
-
-  const steps = streamingProResponse.steps_details;
+  // All hooks must run on every render before any early return — React rule-of-hooks.
+  const steps = streamingProResponse?.steps_details ?? [];
   const doneCount = steps.filter(
     (step) => step.status === AgentSearchStepStatus.DONE,
   ).length;
@@ -262,6 +259,12 @@ export const ProSearchRender = ({
   const activeIndex = currentIndex === -1 ? Math.max(doneCount - 1, 0) : currentIndex;
   const allStepsDone = steps.length > 0 && doneCount === steps.length;
   const researchComplete = reportStarted || allStepsDone;
+  const elapsed = useElapsed(isStreamingProSearch && !researchComplete);
+
+  if (!streamingProResponse?.steps_details) {
+    return isStreamingProSearch ? <ProSearchSkeleton /> : null;
+  }
+
   const progress = researchComplete
     ? 100
     : steps.length
@@ -279,7 +282,6 @@ export const ProSearchRender = ({
   const showReadingPages =
     isSynthesisStep && readingPages && readingPages.total > 0;
   const stalled = stallStatus === "warning" && !researchComplete;
-  const elapsed = useElapsed(isStreamingProSearch && !researchComplete);
 
   const subtitle = stalled
     ? "Still working…"
