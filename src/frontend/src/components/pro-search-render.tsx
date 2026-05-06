@@ -300,7 +300,7 @@ export const ProSearchRender = ({
   return (
     <motion.section
       layout
-      initial={{ opacity: 0, y: -6 }}
+      initial={isStreamingProSearch ? { opacity: 0, y: -6 } : false}
       animate={{ opacity: 1, y: 0 }}
       className="mb-3 overflow-hidden rounded-md border bg-card/70 shadow-sm"
       aria-label="Research progress"
