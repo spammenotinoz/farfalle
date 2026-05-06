@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -68,8 +69,11 @@ def configure_middleware(app: FastAPI):
         allow_headers=["*"],
     )
 
-    # Explicitly register OPTIONS so preflight requests never fall through to
-    # a route handler that might swallow them before the CORS middleware fires.
+    # CORSMiddleware handles all OPTIONS preflights automatically; no explicit
+    # route needed. The explicit route was causing problems because it bypassed
+    # the middleware's header injection when it was defined outside configure_middleware.
+    # (Removed explicit @app.options handler)
+
     @app.options("/{path:path}")
     async def preflight(path: str):
         return {"ok": True}
@@ -82,6 +86,13 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Log 422 details so we can see exactly what Safari is sending vs. what we expect."""
+    print(f"[422 ValidationError] path={request.url.path} errors={exc.errors()}")
+    raise exc
 
 
 @app.post("/chat")

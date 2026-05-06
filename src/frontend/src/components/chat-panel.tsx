@@ -167,6 +167,7 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
           streamingMessage={streamingMessage}
           isStreamingMessage={isStreamingMessage}
           isStreamingProSearch={isStreamingProSearch}
+          isResearching={isResearching}
           onRelatedQuestionSelect={handleSend}
         />
         <div ref={messageBottomRef} className="h-0" />

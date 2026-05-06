@@ -25,19 +25,13 @@ export const AskInput = ({
   isFollowingUp?: boolean;
 }) => {
   const [input, setInput] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
 
   const handleSend = async () => {
     const message = input.trim();
-    if (message.length < 3 || isStreaming || isResearching) return;
-    setIsStreaming(true);
-    try {
-      await sendMessage(message);
-      setInput("");
-    } finally {
-      setIsStreaming(false);
-    }
+    if (message.length < 3 || isResearching) return;
+    setInput("");
+    await sendMessage(message);
   };
 
   const handleVoiceToggle = () => {
@@ -161,7 +155,7 @@ export const AskInput = ({
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                if (input.trim().length >= 3 && !isStreaming && !isResearching) {
+                if (input.trim().length >= 3 && !isResearching) {
                   handleSend();
                 }
               }
@@ -199,7 +193,7 @@ export const AskInput = ({
                         "rounded-md bg-foreground text-background hover:bg-foreground/80 transition-all duration-200",
                         isFollowingUp ? "h-8 w-8" : "h-9 w-9",
                       )}
-                      disabled={input.trim().length < 3 || isStreaming}
+                      disabled={input.trim().length < 3 || isResearching}
                     >
                       <ArrowUp size={isFollowingUp ? 16 : 18} strokeWidth={2.5} />
                     </Button>

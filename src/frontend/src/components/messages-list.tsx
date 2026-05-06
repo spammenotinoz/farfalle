@@ -10,25 +10,34 @@ import { ProSearchRender } from "./pro-search-render";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
+interface MessagesListProps {
+  messages: ChatMessage[];
+  streamingMessage: ChatMessage | null;
+  isStreamingMessage: boolean;
+  isStreamingProSearch: boolean;
+  isResearching: boolean;
+  onRelatedQuestionSelect: (question: string) => void;
+}
+
 const MessagesList = ({
   messages,
   streamingMessage,
   isStreamingMessage,
   isStreamingProSearch,
+  isResearching,
   onRelatedQuestionSelect,
-}: {
-  messages: ChatMessage[];
-  streamingMessage: ChatMessage | null;
-  isStreamingMessage: boolean;
-  isStreamingProSearch: boolean;
-  onRelatedQuestionSelect: (question: string) => void;
-}) => {
+}: MessagesListProps) => {
   const streamingProResponse = streamingMessage?.agent_response;
 
   const hasReportText = Boolean(streamingMessage?.content?.trim());
   const finalStepStarted = Boolean(
     streamingProResponse?.steps_details?.at(-1)?.status !== "default",
   );
+
+  // True immediately when the user hits send (before first SSE event arrives).
+  // Shows a skeleton so the user knows something is happening.
+  const isWaitingForFirstEvent =
+    isResearching && !isStreamingMessage && messages.length > 0;
 
   return (
     <div className="flex flex-col pb-32">
@@ -116,6 +125,18 @@ const MessagesList = ({
         >
           <Loader2 className="h-4 w-4 animate-spin" />
           Generating report...
+        </motion.div>
+      )}
+
+      {/* Show skeleton immediately after user submits, before first SSE event */}
+      {isWaitingForFirstEvent && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-3 flex items-center gap-2 rounded-md border border-tint/20 bg-tint/5 px-3 py-2 text-sm text-tint"
+        >
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Starting research…
         </motion.div>
       )}
 
