@@ -36,14 +36,20 @@ const InlineSources = ({ sources }: { sources: ChatMessage["sources"] }) => {
   );
 };
 
+// ─── URL Detection Regex ──────────────────────────────────────────────
+// Declared at module scope to avoid the g-flag lastIndex state bug.
+// ───────────────────────────────────────────────────────────────────────
+const URL_REGEX = /(https?:\/\/[^\s]+)/;
+
 // ─── Error Message ───────────────────────────────────────────────────────
 export function ErrorMessage({ content }: { content: string }) {
+  const words = content.split(" ");
   return (
     <Alert className="bg-destructive/5 border-destructive/15 p-5 rounded-md">
       <AlertDescription className="text-sm text-foreground leading-relaxed">
-        {content.split(" ").map((word, index) => {
-          const urlPattern = /(https?:\/\/[^\s]+)/g;
-          if (urlPattern.test(word)) {
+        {words.map((word, index) => {
+          URL_REGEX.lastIndex = 0; // reset before every test call
+          if (URL_REGEX.test(word)) {
             return (
               <a key={index} href={word} target="_blank" rel="noopener noreferrer" className="underline text-tint">
                 {word}

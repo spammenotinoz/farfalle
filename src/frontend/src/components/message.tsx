@@ -81,39 +81,45 @@ function formatHostname(url: string) {
   }
 }
 
-function replaceCitationText(
-  text: string,
-  sources: SearchResult[] | null | undefined,
-): React.ReactNode[] {
-  const parts: React.ReactNode[] = [];
+const replaceCitationText = (() => {
+  // Pre-compiled outside the render to avoid g-flag lastIndex state corruption.
   const regex = /\[(\d+)\]/g;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
+  return (
+    text: string,
+    sources: SearchResult[] | null | undefined,
+  ): React.ReactNode[] => {
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    // Reset lastIndex so every call starts at the beginning of the string.
+    regex.lastIndex = 0;
 
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(text.slice(lastIndex, match.index));
+      }
+
+      const number = Number(match[1]);
+      const source = sources?.[number - 1];
+      parts.push(
+        <CitationBadge
+          // Stable key — citation number alone is unique per message.
+          key={`citation-${number}`}
+          number={number}
+          url={source?.url ?? ""}
+          title={source?.title}
+        />,
+      );
+      lastIndex = regex.lastIndex;
     }
 
-    const number = Number(match[1]);
-    const source = sources?.[number - 1];
-    parts.push(
-      <CitationBadge
-        key={`citation-${number}-${match.index}`}
-        number={number}
-        url={source?.url ?? ""}
-        title={source?.title}
-      />,
-    );
-    lastIndex = regex.lastIndex;
-  }
+    if (lastIndex < text.length) {
+      parts.push(text.slice(lastIndex));
+    }
 
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
-
-  return parts;
-}
+    return parts;
+  };
+})();
 
 function renderCitations(
   node: React.ReactNode,

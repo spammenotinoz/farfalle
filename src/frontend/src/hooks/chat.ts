@@ -27,8 +27,6 @@ import { env } from "../env.mjs";
 
 const BASE_URL = env.NEXT_PUBLIC_API_URL;
 
-let stepsDetails: AgentSearchStep[] = [];
-
 const streamChat = async ({
   request,
   signal,
@@ -72,6 +70,9 @@ const convertToChatRequest = (query: string, history: ChatMessage[]) => {
 export const useChat = () => {
   const { addMessage, messages, threadId, setThreadId } = useChatStore();
   const { model, researchDepth } = useConfigStore();
+  // Replaces the old module-level `let stepsDetails` — each hook instance
+  // gets its own ref, preventing cross-instance state corruption on Safari.
+  const stepsDetailsRef = useRef<AgentSearchStep[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const [streamingMessage, setStreamingMessage] = useState<ChatMessage | null>(
@@ -114,12 +115,12 @@ export const useChat = () => {
           break;
         }
         // Mark research planning complete once answer streaming begins.
-        stepsDetails = stepsDetails.map((step) => ({
+        stepsDetailsRef.current = stepsDetailsRef.current.map((step) => ({
           ...step,
           status: AgentSearchStepStatus.DONE,
         }));
         state.agent_response = {
-          steps_details: stepsDetails,
+          steps_details: stepsDetailsRef.current,
         };
 
         break;
@@ -135,12 +136,17 @@ export const useChat = () => {
         // Only if the backend is using the DB
         if (endData.thread_id) {
           setThreadId(endData.thread_id);
-          window.history.pushState({}, "", `/search/${endData.thread_id}`);
+          // Guard: window.history.pushState throws SecurityError in Safari when
+          // fired from a component that has since unmounted (e.g. tab hidden
+          // mid-stream). Checking document.hidden is sufficient.
+          if (!document.hidden) {
+            window.history.pushState({}, "", `/search/${endData.thread_id}`);
+          }
         }
         return;
       case StreamEvent.AGENT_QUERY_PLAN:
         const { steps } = eventItem.data as AgentQueryPlanStream;
-        stepsDetails =
+        stepsDetailsRef.current =
           steps?.map((step, index) => ({
             step: step,
             queries: [],
@@ -149,45 +155,45 @@ export const useChat = () => {
             step_number: index,
           })) ?? [];
 
-        if (stepsDetails[0]) {
-          stepsDetails[0].status = AgentSearchStepStatus.CURRENT;
+        if (stepsDetailsRef.current[0]) {
+          stepsDetailsRef.current[0].status = AgentSearchStepStatus.CURRENT;
         }
         state.agent_response = {
-          steps_details: stepsDetails,
+          steps_details: stepsDetailsRef.current,
         };
         break;
       case StreamEvent.AGENT_SEARCH_QUERIES:
         const { queries, step_number: queryStepNumber } =
           eventItem.data as AgentSearchQueriesStream;
-        const queryStepIndex = stepsDetails.findIndex(
+        const queryStepIndex = stepsDetailsRef.current.findIndex(
           (step) => step.step_number === queryStepNumber,
         );
         if (queryStepIndex === -1) break;
-        stepsDetails[queryStepIndex].queries = queries;
-        stepsDetails[queryStepIndex].status = AgentSearchStepStatus.CURRENT;
+        stepsDetailsRef.current[queryStepIndex].queries = queries;
+        stepsDetailsRef.current[queryStepIndex].status = AgentSearchStepStatus.CURRENT;
         if (queryStepIndex !== 0) {
-          stepsDetails[queryStepIndex - 1].status =
+          stepsDetailsRef.current[queryStepIndex - 1].status =
             AgentSearchStepStatus.DONE;
         }
         state.agent_response = {
-          steps_details: stepsDetails,
+          steps_details: stepsDetailsRef.current,
         };
         break;
       case StreamEvent.AGENT_READ_RESULTS:
         const { results, step_number: resultsStepNumber } =
           eventItem.data as AgentReadResultsStream;
-        const resultsStepIndex = stepsDetails.findIndex(
+        const resultsStepIndex = stepsDetailsRef.current.findIndex(
           (step) => step.step_number === resultsStepNumber,
         );
         if (resultsStepIndex !== -1) {
-          stepsDetails[resultsStepIndex].results = results;
+          stepsDetailsRef.current[resultsStepIndex].results = results;
         }
 
         break;
       case StreamEvent.AGENT_FINISH:
-        if (stepsDetails.length > 0) {
-          const finalStepIndex = stepsDetails.length - 1;
-          stepsDetails = stepsDetails.map((step, index) => ({
+        if (stepsDetailsRef.current.length > 0) {
+          const finalStepIndex = stepsDetailsRef.current.length - 1;
+          stepsDetailsRef.current = stepsDetailsRef.current.map((step, index) => ({
             ...step,
             status:
               index === finalStepIndex
@@ -195,7 +201,7 @@ export const useChat = () => {
                 : AgentSearchStepStatus.DONE,
           }));
           state.agent_response = {
-            steps_details: stepsDetails,
+            steps_details: stepsDetailsRef.current,
           };
         }
         break;
@@ -222,8 +228,8 @@ export const useChat = () => {
       agent_response:
         state.agent_response !== null
           ? {
-              steps: stepsDetails.map((step) => step.step),
-              steps_details: stepsDetails,
+              steps: stepsDetailsRef.current.map((step) => step.step),
+              steps_details: stepsDetailsRef.current,
             }
           : null,
     });
@@ -241,7 +247,7 @@ export const useChat = () => {
         agent_response: null,
       };
       addMessage({ role: MessageRole.USER, content: request.query });
-      stepsDetails = [];
+      stepsDetailsRef.current = [];
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
       setIsResearching(true);
