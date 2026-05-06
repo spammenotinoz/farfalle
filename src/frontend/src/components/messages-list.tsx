@@ -48,7 +48,14 @@ const MessagesList = ({
 
   return (
     <div className="flex flex-col pb-32">
-      <AnimatePresence mode="popLayout">
+      {/*
+        Default mode (sync) — not popLayout. popLayout pulls the entering
+        assistant message into the same "pop" cycle when the streaming UI
+        sections unmount in the same commit (after STREAM_END), causing the
+        report and progress card to vanish instantly after generation. With
+        sync mode the new entry mounts normally while siblings shift.
+      */}
+      <AnimatePresence initial={false}>
         {messages.map((message, index) =>
           message.role === MessageRole.USER ? (
             <motion.div
@@ -64,7 +71,7 @@ const MessagesList = ({
           ) : (
             <motion.div
               key={`assistant-${index}`}
-              initial={false}
+              initial={{ opacity: 1, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
