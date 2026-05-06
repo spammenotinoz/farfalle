@@ -345,6 +345,7 @@
 
 /* ─── Answer Card ──────────────────────────────────────────────────── */
 .answer-card {
+  position: relative;
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: 0.5rem;
@@ -352,6 +353,22 @@
     0 1px 2px hsl(var(--foreground) / 0.03),
     0 4px 12px hsl(var(--foreground) / 0.04);
   padding: 1.25rem 1.5rem;
+  overflow: hidden;
+}
+
+/* Left accent stripe gives the report a clear identity vs. supporting cards. */
+.answer-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    hsl(var(--tint) / 0.55) 0%,
+    hsl(var(--tint) / 0.15) 60%,
+    transparent 100%
+  );
+  pointer-events: none;
 }
 
 /* ─── Research sections ──────────────────────────────────────────── */
@@ -396,18 +413,62 @@
 
 /* ─── Sources sidebar ─────────────────────────────────────────────── */
 .source-card {
+  position: relative;
   border: 1px solid hsl(var(--border));
   border-radius: 0.5rem;
-  padding: 0.875rem;
+  padding: 0.875rem 0.875rem 0.875rem 2.5rem;
   margin-bottom: 0.625rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
   background: hsl(var(--card));
   display: block;
 }
 
 .source-card:hover {
   border-color: hsl(var(--tint) / 0.45);
-  box-shadow: 0 2px 8px hsl(var(--foreground) / 0.05);
+  box-shadow:
+    0 1px 2px hsl(var(--foreground) / 0.04),
+    0 6px 16px hsl(var(--foreground) / 0.06);
+  transform: translateY(-1px);
+  background: linear-gradient(
+    180deg,
+    hsl(var(--tint) / 0.025) 0%,
+    hsl(var(--card)) 100%
+  );
+}
+
+/* Citation rail — the [N] is the visual anchor that ties prose to source. */
+.source-card-rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 1.875rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: hsl(var(--tint));
+  background: hsl(var(--tint) / 0.04);
+  border-right: 1px solid hsl(var(--tint) / 0.1);
+  border-radius: 0.5rem 0 0 0.5rem;
+  letter-spacing: -0.02em;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.source-card:hover .source-card-rail {
+  background: hsl(var(--tint) / 0.09);
+  color: hsl(var(--tint));
+}
+
+.dark .source-card-rail {
+  background: hsl(var(--tint) / 0.06);
 }
 
 .source-card-title {
@@ -436,32 +497,29 @@
   overflow: hidden;
 }
 
-.source-card-open {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.6875rem;
-  color: hsl(var(--tint));
-  margin-top: 0.5rem;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.source-card:hover .source-card-open {
-  opacity: 1;
-}
-
 /* ─── Citation badge ──────────────────────────────────────────────── */
 .citation-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-family: var(--font-mono);
+  font-weight: 600;
   color: hsl(var(--tint));
   cursor: pointer;
   vertical-align: super;
   line-height: 1;
+  border: 1px solid hsl(var(--tint) / 0.2);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.citation-badge:hover {
+  background: hsl(var(--tint) / 0.18) !important;
+  border-color: hsl(var(--tint) / 0.45);
+  transform: translateY(-1px);
 }
 
 /* ─── Streaming cursor ─────────────────────────────────────────────── */
@@ -479,6 +537,161 @@
   vertical-align: text-bottom;
   animation: cursor-blink 0.85s ease-in-out infinite;
   margin-left: 1px;
+}
+
+/* ─── Research progress card ─────────────────────────────────────────
+   Timeline rail, shimmer for the progress bar, indeterminate state
+   for synthesis, and a top fade on the scrollable step list. */
+
+.research-card-header {
+  background:
+    linear-gradient(
+      180deg,
+      hsl(var(--tint) / 0.045) 0%,
+      hsl(var(--muted) / 0.25) 100%
+    );
+}
+
+.research-progress-track {
+  position: relative;
+  height: 0.375rem;
+  border-radius: 999px;
+  background: hsl(var(--muted));
+  overflow: hidden;
+}
+
+.research-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--tint) / 0.85) 0%,
+    hsl(var(--tint)) 50%,
+    hsl(var(--tint) / 0.85) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes progress-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(220%); }
+}
+
+.research-progress-fill.is-streaming::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(0 0% 100% / 0.45) 50%,
+    transparent 100%
+  );
+  width: 45%;
+  animation: progress-shimmer 1.6s ease-in-out infinite;
+}
+
+.dark .research-progress-fill.is-streaming::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(0 0% 100% / 0.18) 50%,
+    transparent 100%
+  );
+}
+
+/* Indeterminate (synthesis) — sweeps a band across the track. */
+@keyframes progress-indeterminate {
+  0%   { transform: translateX(-40%); }
+  50%  { transform: translateX(120%); }
+  100% { transform: translateX(220%); }
+}
+
+.research-progress-indeterminate {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 35%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--tint) / 0.9) 50%,
+    transparent 100%
+  );
+  animation: progress-indeterminate 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Vertical timeline rail behind the step icons. */
+.research-timeline {
+  position: relative;
+  padding-left: 0;
+}
+
+.research-timeline::before {
+  content: "";
+  position: absolute;
+  left: 1.125rem; /* aligns with the 20px icon-wrap center inside .research-step (8px pad + 10px) */
+  top: 0.875rem;
+  bottom: 0.875rem;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    hsl(var(--border)) 8%,
+    hsl(var(--border)) 92%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Step row — flat by default; the active row gets a tinted block. */
+.research-step {
+  position: relative;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.75rem 0.625rem 0.5rem;
+  transition: background 0.18s ease;
+}
+
+.research-step.is-active {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--tint) / 0.07) 0%,
+    hsl(var(--tint) / 0.02) 100%
+  );
+}
+
+.research-step .research-step-icon-wrap {
+  position: relative;
+  z-index: 1;
+  background: hsl(var(--card));
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.research-step.is-active .research-step-icon-wrap {
+  background: hsl(var(--card));
+}
+
+/* Top fade on the scrollable step list to soften the cut-off. */
+.research-step-scroll {
+  position: relative;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent 100%
+  );
+          mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent 100%
+  );
 }
 
 /* ─── Sidebar toggle ───────────────────────────────────────────────── */

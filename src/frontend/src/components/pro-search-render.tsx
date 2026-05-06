@@ -144,10 +144,12 @@ const StepRow = memo(
   ({
     step,
     index,
+    total,
     active,
   }: {
     step: AgentSearchStep;
     index: number;
+    total: number;
     active: boolean;
   }) => {
     const reduced = useReducedMotion();
@@ -159,18 +161,25 @@ const StepRow = memo(
         animate={{ opacity: 1, y: 0 }}
         transition={reduced ? { duration: 0 } : { duration: 0.2, delay: index * 0.02 }}
         className={cn(
-          "rounded-md border px-3 py-2.5 transition-colors",
-          active
-            ? "border-tint/35 bg-tint/5"
-            : "border-border/60 bg-background/45",
+          "research-step",
+          active && "is-active",
         )}
       >
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex-shrink-0">
+        <div className="flex items-start gap-2.5">
+          <div className="research-step-icon-wrap mt-0.5 flex-shrink-0">
             <StepIcon status={status} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 items-start gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <span
+                className={cn(
+                  "flex-shrink-0 font-mono text-[10px] tabular-nums",
+                  active ? "text-tint/80" : "text-muted-foreground/60",
+                )}
+              >
+                {String(index + 1).padStart(2, "0")}
+                <span className="opacity-50">/{String(total).padStart(2, "0")}</span>
+              </span>
               <p
                 className={cn(
                   "min-w-0 flex-1 truncate text-xs font-medium",
@@ -182,7 +191,7 @@ const StepRow = memo(
               </p>
               <span
                 className={cn(
-                  "flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
+                  "flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium tracking-tight",
                   status === AgentSearchStepStatus.DONE &&
                     "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
                   status === AgentSearchStepStatus.CURRENT &&
@@ -297,6 +306,11 @@ export const ProSearchRender = ({
           ? "Sources gathered. Writing the report now."
           : currentStep;
 
+  // The synthesis step has no measurable progress — show an indeterminate
+  // sweep instead of pinning the bar at the same percent for many seconds.
+  const showIndeterminate =
+    !researchComplete && isStreamingProSearch && (isSynthesisStep || showReadingPages);
+
   return (
     <motion.section
       layout
@@ -307,9 +321,14 @@ export const ProSearchRender = ({
       data-testid="research-card"
       data-research-complete={researchComplete ? "true" : undefined}
     >
-      <div className="border-b bg-muted/20 px-3.5 py-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-tint/10 text-tint">
+      <div className="research-card-header border-b px-3.5 py-3">
+        <div className="flex items-center gap-2.5">
+          <div
+            className={cn(
+              "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-tint ring-1 ring-tint/15",
+              researchComplete ? "bg-emerald-500/10" : "bg-tint/10",
+            )}
+          >
             {researchComplete ? (
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             ) : isStreamingProSearch ? (
@@ -320,13 +339,21 @@ export const ProSearchRender = ({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold leading-tight">
+              <p className="text-sm font-semibold leading-tight tracking-tight">
                 {researchComplete
                   ? "Research complete"
                   : isSynthesisStep
                     ? "Generating report"
                     : "Research in progress"}
               </p>
+              {steps.length > 0 && !researchComplete && (
+                <span
+                  className="hidden rounded bg-background/80 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground ring-1 ring-border/60 sm:inline-flex"
+                  title="Step progress"
+                >
+                  {Math.min(activeIndex + 1, steps.length)}/{steps.length}
+                </span>
+              )}
               {stalled ? (
                 <span
                   className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"
@@ -355,7 +382,7 @@ export const ProSearchRender = ({
           <div className="flex flex-shrink-0 items-center gap-2">
             {(isStreamingProSearch || researchComplete) && (
               <span
-                className="hidden items-center gap-1 rounded bg-background px-1.5 py-1 text-[11px] tabular-nums text-muted-foreground sm:inline-flex"
+                className="hidden items-center gap-1 rounded bg-background/80 px-1.5 py-1 text-[11px] tabular-nums text-muted-foreground ring-1 ring-border/60 sm:inline-flex"
                 data-testid="elapsed-timer"
                 title="Elapsed time"
                 aria-hidden="true"
@@ -365,11 +392,12 @@ export const ProSearchRender = ({
               </span>
             )}
             <div
-              className="flex items-center gap-1.5 rounded bg-background px-2 py-1 text-[11px] text-muted-foreground"
+              className="flex items-center gap-1.5 rounded bg-background/80 px-2 py-1 text-[11px] text-muted-foreground ring-1 ring-border/60"
               data-testid="source-count"
             >
               <BookOpen className="h-3 w-3 text-tint" />
-              {sourceCount} sources
+              <span className="tabular-nums">{sourceCount}</span>
+              <span className="hidden sm:inline">sources</span>
               {failedCount > 0 && (
                 <span className="text-amber-600 dark:text-amber-400">
                   · {failedCount} unavailable
@@ -378,25 +406,42 @@ export const ProSearchRender = ({
             </div>
           </div>
         </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-          <motion.div
-            className="h-full rounded-full bg-tint"
-            initial={false}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-          />
+        <div
+          className="research-progress-track mt-2.5"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={researchComplete ? 100 : showIndeterminate ? undefined : progress}
+          aria-label="Research progress"
+        >
+          {showIndeterminate ? (
+            <div className="research-progress-indeterminate" />
+          ) : (
+            <motion.div
+              className={cn(
+                "research-progress-fill",
+                isStreamingProSearch && !researchComplete && "is-streaming",
+              )}
+              initial={false}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            />
+          )}
         </div>
       </div>
 
-      <div className="max-h-[260px] space-y-1.5 overflow-y-auto p-2">
-        {steps.map((step, index) => (
-          <StepRow
-            key={`${step.step_number}-${step.step}`}
-            step={step}
-            index={index}
-            active={index === activeIndex}
-          />
-        ))}
+      <div className="research-step-scroll max-h-[260px] overflow-y-auto p-2">
+        <div className="research-timeline space-y-0.5">
+          {steps.map((step, index) => (
+            <StepRow
+              key={`${step.step_number}-${step.step}`}
+              step={step}
+              index={index}
+              total={steps.length}
+              active={index === activeIndex}
+            />
+          ))}
+        </div>
       </div>
     </motion.section>
   );
