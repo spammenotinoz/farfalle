@@ -16,6 +16,7 @@ from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 from backend.agent_search import stream_pro_search_qa
 from backend.db.chat import get_chat_history, get_thread
 from backend.db.engine import get_session
+from backend.constants import ChatModel
 from backend.schemas import (
     ChatHistoryResponse,
     ChatRequest,
@@ -118,6 +119,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def chat(
     chat_request: ChatRequest, request: Request, session: Session = Depends(get_session)
 ) -> Generator[ChatResponseEvent, None, None]:
+    # Gracefully coerce unknown model values to the default rather than 422ing.
+    # This handles stale localStorage from old deployments without requiring users
+    # to clear browser storage.
+    if chat_request.model not in ChatModel.__members__.values():
+        print(f"[model] unknown model {chat_request.model!r} — defaulting to {ChatModel.FAST}")
+        chat_request.model = ChatModel.FAST
+
     async def generator():
         try:
             validate_model(chat_request.model)
