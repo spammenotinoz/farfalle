@@ -118,7 +118,13 @@ export const useChat = () => {
   };
 
   const resetStreamingState = () => {
-    setStreamingMessage(null);
+    // NOTE: setStreamingMessage(null) is intentionally NOT called here.
+    // It is called at the very end of handleEvent instead, after all switch
+    // cases.  React 18 batches all setState calls from the same synchronous
+    // call stack into a single commit.  Placing setStreamingMessage(null)
+    // inside resetStreamingState causes it to be batched together with
+    // setStreamingMessage(state) from a preceding TEXT_CHUNK handler call —
+    // the null then wins, making the report vanish after STREAM_END.
     setIsStreamingMessage(false);
     setIsStreamingProSearch(false);
     setIsResearching(false);
@@ -181,13 +187,16 @@ export const useChat = () => {
           (eventItem.data as RelatedQueriesStream).related_queries ?? [];
         break;
       case StreamEvent.STREAM_END:
-        const endData = eventItem.data as StreamEndStream;
         addMessage({ ...state });
         resetStreamingState();
+        // Must clear streamingMessage AFTER resetStreamingState to avoid batching
+        // the null with a preceding TEXT_CHUNK setStreamingMessage call.
+        setStreamingMessage(null);
 
         // Only if the backend is using the DB
-        if (endData.thread_id) {
-          setThreadId(endData.thread_id);
+        const threadId = (eventItem.data as StreamEndStream).thread_id;
+        if (threadId != null) {
+          setThreadId(threadId as number);
           // URL update intentionally omitted: history.pushState is intercepted
           // by Next.js App Router as a route navigation, unmounting the current
           // page and causing a blank screen during the transition. The thread ID
