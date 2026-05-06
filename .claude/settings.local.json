@@ -10,7 +10,8 @@
       "Bash(pnpm *)",
       "Bash(uvicorn *)",
       "Bash(python3 *)",
-      "WebFetch(domain:www.perplexity.ai)"
+      "WebFetch(domain:www.perplexity.ai)",
+      "Bash(git *)"
     ]
   }
 }
