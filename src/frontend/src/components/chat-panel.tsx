@@ -102,7 +102,12 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
   useEffect(() => {
     if (!thread) return;
     setThreadId(thread.thread_id);
-    setMessages(thread.messages || []);
+    // Only replace messages from the API when the store is empty — the SSE
+    // stream already has the complete, rich state (including agent_response).
+    // Overwriting with API data would erase that and cause a visible flash.
+    if (messages.length === 0) {
+      setMessages(thread.messages || []);
+    }
   }, [threadId, thread]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -142,7 +147,11 @@ export const ChatPanel = ({ threadId }: { threadId?: number }) => {
   }
 
   // ─── Loading ────────────────────────────────────────────────────────────
-  if (isLoading) {
+  // Skip the loading screen if messages are already in the store — this
+  // happens when the SSE stream completes and pushState navigates to
+  // /search/[slug], causing Next.js to remount ChatPanel. The store already
+  // has the full conversation; showing a spinner here would blank the screen.
+  if (isLoading && messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center flex-1 py-32">
         <LoaderIcon className="animate-spin w-7 h-7 text-tint mb-3" />
