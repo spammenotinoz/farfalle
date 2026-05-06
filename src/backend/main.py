@@ -67,7 +67,25 @@ def configure_middleware(app: FastAPI):
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["*"],
     )
+
+    # Strip chunked encoding and prevent buffering proxies from holding SSE.
+    # Some CDN/proxies (Cloudflare, CloudFront) suppress Transfer-Encoding: chunked
+    # unless Content-Encoding is also set. Safari is particularly sensitive to
+    # this — a buffered response arrives with Content-Length, which causes
+    # fetch() to wait indefinitely for that many bytes before exposing the body.
+    @app.middleware("http")
+    async def prevent_sse_buffering(request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Accel-Buffering"] = "no"
+        response.headers["Cache-Control"] = "no-cache"
+        # Safari requires Content-Length to be absent for streaming responses.
+        # If set, the browser waits for the full Content-Length before delivering
+        # any body bytes to JavaScript, which makes SSE appear broken.
+        if request.url.path in ("/chat",):
+            response.headers.pop("Content-Length", None)
+        return response
 
     # CORSMiddleware handles all OPTIONS preflights automatically; no explicit
     # route needed. The explicit route was causing problems because it bypassed
